@@ -1,0 +1,22 @@
+# Koyeb Deployment Configuration for Darzan Fullstack Platform
+name: darzan
+services:
+  - name: darzan-web
+    type: web
+    regions:
+      - fra
+    build:
+      dockerfile:
+        dockerfile: Dockerfile
+    ports:
+      - port: 3001
+        path: /
+    health_checks:
+      - http:
+          path: /api/health
+          port: 3001
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"

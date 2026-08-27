@@ -1,0 +1,224 @@
+.catalog-wrap {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 24px var(--gutter) 64px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+
+@media (min-width: 900px) {
+  .catalog-wrap { grid-template-columns: 240px 1fr; }
+}
+
+.filters {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  height: fit-content;
+  position: sticky;
+  top: 88px;
+}
+
+.filters h4 {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 12px;
+}
+
+.filter-group { margin-bottom: 28px; }
+.filter-group:last-child { margin-bottom: 0; }
+
+.cat-list, .price-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cat-list button, .price-list button {
+  text-align: right;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-weight: 500;
+  transition: all var(--duration);
+}
+
+.cat-list button.active {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+.cat-list button:not(.active):hover,
+.price-list button:not(.active):hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.price-list button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.filters-mobile-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  width: 100%;
+  transition: border-color var(--duration);
+}
+
+.filters-mobile-toggle:hover { border-color: var(--line-strong); }
+
+@media (min-width: 900px) { .filters-mobile-toggle { display: none; } }
+
+.filters.mobile-hidden { display: none; }
+
+@media (min-width: 900px) {
+  .filters.mobile-hidden { display: block; }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.result-count {
+  font-size: 13.5px;
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.sort-select {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: var(--line-strong);
+}
+
+/* ─── Color Filter Chips ─── */
+.color-filter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.color-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.color-filter-chip:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+}
+
+.color-filter-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-soft, #f4e8e1);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.color-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* ─── Size Filter Chips ─── */
+.size-filter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.size-filter-chip {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.size-filter-chip:hover {
+  border-color: var(--line-strong);
+}
+
+.size-filter-chip.active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ─── Clear Filters Button ─── */
+.clear-filters-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed var(--clay, #b33);
+  background: none;
+  color: var(--clay, #b33);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.clear-filters-btn:hover {
+  background: rgba(180, 50, 50, 0.06);
+}

@@ -1,0 +1,466 @@
+{
+  "settings": {
+    "about_text": "درازن — منصة تجارة الملابس بالجملة في عموم العراق. نوفر أجود الخامات وأحدث الموديلات بأسعار جملة تنافسية وتوصيل لجميع المحافظات.",
+    "return_policy": "يحق للمشتري فحص البضاعة عند الاستلام واستبدال أي قطع تحتوي على عيوب مصنعية خلال 48 ساعة.",
+    "store_name": "درازن",
+    "announce_text": "توصيل لجميع محافظات العراق · الدفع عند الاستلام",
+    "announce_enabled": "true",
+    "promo_enabled": "true",
+    "promo_title": "تخفيضات",
+    "promo_text": "على قطع مختارة من التشكيلة الصيفية والشتوية للجملة test ",
+    "promo_discount": "الحك يا ولد",
+    "promo_link": "/catalog",
+    "promo_bg": "#1e7146",
+    "flash_sale_enabled": "true",
+    "flash_sale_title": "عروض الخاطفة الجملة — الساعات الأخيرة",
+    "flash_sale_discount": "خصم ٣٥٪-",
+    "flash_sale_end": "2026-08-26T00:17:03.817Z",
+    "hero_slides": "[{\"key\":\"s1\",\"tag\":\"تخفيض\",\"title\":\"تخفيضات الشتاء\",\"desc\":\"خصم يصل إلى ٢٥٪ على تشكيلة الشتاء بالكامل\",\"cta\":\"تسوّق الآن\",\"to\":\"/catalog\",\"bg_url\":\"\"},{\"key\":\"s2\",\"tag\":\"جديد\",\"title\":\"وصل حديثاً\",\"desc\":\"تشكيلة الشتاء الجديدة بكل الألوان والمقاسات\",\"cta\":\"شاهد التشكيلة\",\"to\":\"/catalog\",\"bg_url\":\"\"},{\"key\":\"s3\",\"tag\":\"جملة\",\"title\":\"أسعار الجملة\",\"desc\":\"أفضل أسعار الجملة لتجار التجزئة في عموم العراق\",\"cta\":\"اطلب الآن\",\"to\":\"/catalog\",\"bg_url\":\"\"}]",
+    "whatsapp_number": ""
+  },
+  "products": [
+    {
+      "id": "11111111-1111-1111-1111-111111111101",
+      "name": "كنزة شتوية صوف",
+      "cat": "رجالي",
+      "category": "رجالي",
+      "description": "كنزة شتوية دافئة من خامة صوف عالية الجودة، مناسبة لأجواء الشتاء الباردة. قصّة مريحة تناسب جميع الأذواق، ومتوفرة بعدة ألوان ومقاسات تبدأ من S وحتى 4XL.",
+      "priceMin": 25000,
+      "priceMax": 30000,
+      "price_min": 25000,
+      "price_max": 30000,
+      "icon": "jacket",
+      "is_active": true,
+      "colors": [
+        {
+          "id": "c1",
+          "code": "RED",
+          "name": "أحمر",
+          "hex": "#8B2E1F",
+          "g1": "#E8CFC6",
+          "g2": "#D8AC9C"
+        },
+        {
+          "id": "c2",
+          "code": "TEAL",
+          "name": "أخضر تيل",
+          "hex": "#1E4238",
+          "g1": "#D9E3DC",
+          "g2": "#B9CBC0"
+        },
+        {
+          "id": "c3",
+          "code": "BLACK",
+          "name": "أسود",
+          "hex": "#2B2B2B",
+          "g1": "#DCDAD6",
+          "g2": "#BEBAB2"
+        },
+        {
+          "id": "c4",
+          "code": "BEIGE",
+          "name": "بيج",
+          "hex": "#C9C2AE",
+          "g1": "#EFE8D8",
+          "g2": "#DECEB0"
+        }
+      ],
+      "skuMatrix": {
+        "RED-S": {
+          "id": "s-1",
+          "price": 25000,
+          "stock": 12,
+          "sku": "DZN-01-RED-S",
+          "available": true
+        },
+        "RED-M": {
+          "id": "s-2",
+          "price": 25000,
+          "stock": 10,
+          "sku": "DZN-01-RED-M",
+          "available": true
+        },
+        "RED-L": {
+          "id": "s-3",
+          "price": 25000,
+          "stock": 8,
+          "sku": "DZN-01-RED-L",
+          "available": true
+        },
+        "RED-XL": {
+          "id": "s-4",
+          "price": 25000,
+          "stock": 15,
+          "sku": "DZN-01-RED-XL",
+          "available": true
+        },
+        "RED-2XL": {
+          "id": "s-5",
+          "price": 28000,
+          "stock": 6,
+          "sku": "DZN-01-RED-2XL",
+          "available": true
+        },
+        "BLACK-M": {
+          "id": "s-6",
+          "price": 25000,
+          "stock": 20,
+          "sku": "DZN-01-BLK-M",
+          "available": true
+        },
+        "BLACK-L": {
+          "id": "s-7",
+          "price": 25000,
+          "stock": 14,
+          "sku": "DZN-01-BLK-L",
+          "available": true
+        }
+      },
+      "images": {}
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111102",
+      "name": "فستان سهرة مطرز",
+      "cat": "فساتين",
+      "category": "فساتين",
+      "description": "فستان سهرة أنيق بتطريز يدوي دقيق، قصّة تناسب المناسبات الخاصة، متوفر بعدة ألوان ومقاسات.",
+      "priceMin": 45000,
+      "priceMax": 45000,
+      "price_min": 45000,
+      "price_max": 45000,
+      "icon": "dress",
+      "is_active": true,
+      "colors": [
+        {
+          "id": "c5",
+          "code": "CLAY",
+          "name": "قرميدي",
+          "hex": "#A8452F",
+          "g1": "#EAD9D2",
+          "g2": "#D9BDB1"
+        },
+        {
+          "id": "c6",
+          "code": "BLACK",
+          "name": "أسود",
+          "hex": "#2B2B2B",
+          "g1": "#DCDAD6",
+          "g2": "#BEBAB2"
+        }
+      ],
+      "skuMatrix": {
+        "CLAY-M": {
+          "id": "s-8",
+          "price": 45000,
+          "stock": 9,
+          "sku": "DZN-02-CLAY-M",
+          "available": true
+        },
+        "BLACK-L": {
+          "id": "s-9",
+          "price": 45000,
+          "stock": 7,
+          "sku": "DZN-02-BLK-L",
+          "available": true
+        }
+      },
+      "images": {}
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111103",
+      "name": "طقم أطفال شتوي",
+      "cat": "أطفال",
+      "category": "أطفال",
+      "description": "طقم شتوي دافئ ومريح للأطفال، خامة قطنية ناعمة على البشرة، متوفر بعدة ألوان وأعمار.",
+      "priceMin": 18000,
+      "priceMax": 18000,
+      "price_min": 18000,
+      "price_max": 18000,
+      "icon": "child",
+      "is_active": true,
+      "colors": [
+        {
+          "id": "c7",
+          "code": "GREEN",
+          "name": "أخضر",
+          "hex": "#3D6E5C",
+          "g1": "#DCE6DD",
+          "g2": "#C4D3C6"
+        },
+        {
+          "id": "c8",
+          "code": "BRASS",
+          "name": "ذهبي",
+          "hex": "#C08A3E",
+          "g1": "#EFE2CC",
+          "g2": "#DCC59B"
+        }
+      ],
+      "skuMatrix": {
+        "GREEN-S": {
+          "id": "s-10",
+          "price": 18000,
+          "stock": 14,
+          "sku": "DZN-03-GRN-S",
+          "available": true
+        }
+      },
+      "images": {}
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111104",
+      "name": "بيجاما منزلية قطن",
+      "cat": "بيتي",
+      "category": "بيتي",
+      "description": "بيجاما منزلية من قطن ناعم ومريح، مثالية للاستخدام اليومي في المنزل.",
+      "priceMin": 15000,
+      "priceMax": 15000,
+      "price_min": 15000,
+      "price_max": 15000,
+      "icon": "home",
+      "is_active": true,
+      "colors": [
+        {
+          "id": "c9",
+          "code": "BEIGE",
+          "name": "بيج",
+          "hex": "#C9C2AE",
+          "g1": "#EFE8D8",
+          "g2": "#DECEB0"
+        },
+        {
+          "id": "c10",
+          "code": "TEAL",
+          "name": "أخضر تيل",
+          "hex": "#1E4238",
+          "g1": "#D9E3DC",
+          "g2": "#B9CBC0"
+        }
+      ],
+      "skuMatrix": {
+        "BEIGE-M": {
+          "id": "s-11",
+          "price": 15000,
+          "stock": 18,
+          "sku": "DZN-04-BEI-M",
+          "available": true
+        }
+      },
+      "images": {}
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111105",
+      "name": "قميص رجالي كلاسيك",
+      "cat": "رجالي",
+      "category": "رجالي",
+      "description": "قميص رجالي كلاسيك بقصّة أنيقة يناسب الدوام والمناسبات، خامة قطنية عالية الجودة.",
+      "priceMin": 20000,
+      "priceMax": 20000,
+      "price_min": 20000,
+      "price_max": 20000,
+      "icon": "jacket",
+      "is_active": true,
+      "colors": [
+        {
+          "id": "c11",
+          "code": "WHITE",
+          "name": "أبيض",
+          "hex": "#FFFDF8",
+          "g1": "#F3EFE3",
+          "g2": "#E4DBC2"
+        },
+        {
+          "id": "c12",
+          "code": "BLACK",
+          "name": "أسود",
+          "hex": "#2B2B2B",
+          "g1": "#DCDAD6",
+          "g2": "#BEBAB2"
+        }
+      ],
+      "skuMatrix": {
+        "WHITE-L": {
+          "id": "s-12",
+          "price": 20000,
+          "stock": 15,
+          "sku": "DZN-05-WHT-L",
+          "available": true
+        }
+      },
+      "images": {}
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111106",
+      "name": "عباية سوداء أنيقة",
+      "cat": "نسائي",
+      "category": "نسائي",
+      "description": "عباية سوداء بقصّة أنيقة وخامة فاخرة، تصميم بسيط يناسب مختلف المناسبات.",
+      "priceMin": 35000,
+      "priceMax": 35000,
+      "price_min": 35000,
+      "price_max": 35000,
+      "icon": "abaya",
+      "is_active": true,
+      "colors": [
+        {
+          "id": "c13",
+          "code": "BLACK",
+          "name": "أسود",
+          "hex": "#2B2B2B",
+          "g1": "#DCDAD6",
+          "g2": "#BEBAB2"
+        }
+      ],
+      "skuMatrix": {
+        "BLACK-FREE": {
+          "id": "s-13",
+          "price": 35000,
+          "stock": 10,
+          "sku": "DZN-06-BLK-F",
+          "available": true
+        }
+      },
+      "images": {}
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord-1787700834976",
+      "orderNumber": "DZN-X4F4WUX",
+      "customerName": "ahmed mustafa",
+      "customerPhone": "07800778278",
+      "province": "كركوك",
+      "address": "test test tset",
+      "notes": "hello",
+      "total": 72000,
+      "status": "معلق",
+      "createdAt": "2026-08-25T23:33:54.976Z",
+      "items": [
+        {
+          "lineId": "line-ord-1787700834976-0",
+          "productId": "11111111-1111-1111-1111-111111111103",
+          "name": "طقم أطفال شتوي",
+          "colorName": "أخضر",
+          "colorHex": "#3D6E5C",
+          "g1": "#DCE6DD",
+          "g2": "#C4D3C6",
+          "size": "S",
+          "sku": "DZN-03-GRN-S",
+          "qty": 4,
+          "price": 18000
+        }
+      ]
+    },
+    {
+      "id": "ord-1787700497320",
+      "orderNumber": "DZN-PVVSK2D",
+      "customerName": "ahmed",
+      "customerPhone": "07800778278",
+      "province": "واسط",
+      "address": "asdasd wqt wq3etg weat",
+      "notes": "",
+      "total": 80000,
+      "status": "معلق",
+      "createdAt": "2026-08-25T23:28:17.320Z",
+      "items": [
+        {
+          "lineId": "line-ord-1787700497320-0",
+          "productId": "p5",
+          "name": "قميص رجالي كلاسيك رسميات",
+          "colorName": "أبيض نصاعة",
+          "colorHex": "#FFFDF8",
+          "g1": "#F3EFE3",
+          "g2": "#E4DBC2",
+          "size": "2XL",
+          "sku": "DZN-P5-WHITE-2XL",
+          "qty": 4,
+          "price": 20000
+        }
+      ]
+    },
+    {
+      "id": "ord-1787624708726",
+      "orderNumber": "DZN-LH129TX",
+      "customerName": "ahmed mustafa badawi",
+      "customerPhone": "07800778278",
+      "province": "بغداد",
+      "address": "حي الجهاد شارع حي الحسين",
+      "notes": "توصيل امن وباسرع وقت test ty man",
+      "total": 75000,
+      "status": "معلق",
+      "createdAt": "2026-08-25T02:25:08.726Z",
+      "items": [
+        {
+          "lineId": "line-ord-1787624708726-0",
+          "productId": "11111111-1111-1111-1111-111111111104",
+          "name": "بيجاما منزلية قطن",
+          "colorName": "بيج",
+          "colorHex": "#C9C2AE",
+          "g1": "#EFE8D8",
+          "g2": "#DECEB0",
+          "size": "M",
+          "sku": "DZN-04-BEI-M",
+          "qty": 5,
+          "price": 15000
+        }
+      ]
+    },
+    {
+      "id": "ord-1787624564197",
+      "orderNumber": "DZN-IDID6HG",
+      "customerName": "???? ?????",
+      "customerPhone": "07801234567",
+      "province": "?????",
+      "address": "??????? - ???? ??? ????",
+      "notes": "??? ?????? ?????? ?? ??? ??????",
+      "total": 55000,
+      "status": "معلق",
+      "createdAt": "2026-08-25T02:22:44.197Z",
+      "items": [
+        {
+          "lineId": "line-ord-1787624564197-0",
+          "productId": null,
+          "name": "???? ????? ??????",
+          "colorName": "????",
+          "size": "L",
+          "sku": "DZN-05-WHT-L",
+          "qty": 2,
+          "price": 20000
+        },
+        {
+          "lineId": "line-ord-1787624564197-1",
+          "productId": null,
+          "name": "?????? ?????? ???",
+          "colorName": "???",
+          "size": "M",
+          "sku": "DZN-04-BEI-M",
+          "qty": 1,
+          "price": 15000
+        }
+      ]
+    },
+    {
+      "id": "ord-1787617251454",
+      "orderNumber": "DZN-5MYMQ40",
+      "customerName": "أحمد علي",
+      "customerPhone": "07701234567",
+      "province": "بغداد",
+      "address": "الكرادة",
+      "notes": "",
+      "total": 50000,
+      "status": "معلق",
+      "createdAt": "2026-08-25T00:20:51.454Z",
+      "items": [
+        {
+          "lineId": "line-ord-1787617251454-0",
+          "productId": null,
+          "name": "كنزة شتوية صوف",
+          "colorName": "أحمر",
+          "size": "L",
+          "qty": 2,
+          "price": 25000
+        }
+      ]
+    }
+  ]
+}
