@@ -133,9 +133,11 @@ if (clientDistPath) {
 app.use(errorHandler)
 
 // --------------- Start Server ---------------
-app.listen(PORT, () => {
-  console.log(`🚀 Darzan Fullstack Server running on port ${PORT}`)
-  console.log(`🗄️  Connected to Supabase in PRODUCTION mode`)
-})
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Darzan Fullstack Server running on port ${PORT}`)
+    console.log(`🗄️  Connected to Supabase in PRODUCTION mode`)
+  })
+}
 
 export default app

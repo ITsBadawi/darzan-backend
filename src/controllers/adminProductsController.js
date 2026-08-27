@@ -49,7 +49,11 @@ export async function createProduct(req, res, next) {
       return res.status(400).json({ error: 'بيانات المنتج غير مكتملة', details: errors })
     }
 
-    const { name, category, description, price_min, price_max, icon, colors, sizes, cover_image, stock_matrix } = req.body
+    const { name, description, icon, colors, sizes, cover_image, stock_matrix } = req.body
+    const category = req.body.category || req.body.cat
+    const price_min = req.body.price_min !== undefined ? req.body.price_min : req.body.priceMin
+    const price_max = req.body.price_max !== undefined ? req.body.price_max : req.body.priceMax
+
     const targetSizes = Array.isArray(sizes) && sizes.length > 0 ? sizes : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL']
     const newId = 'prod-' + Date.now()
 
@@ -75,11 +79,11 @@ export async function createProduct(req, res, next) {
             const grads = gradientForHex(c.hex)
             return {
               product_id: product.id,
-              code: c.code.trim().toUpperCase(),
+              code: (c.code || `C${i+1}`).trim().toUpperCase(),
               name: c.name.trim(),
-              hex: c.hex,
-              g1: grads.g1,
-              g2: grads.g2,
+              hex: c.hex || '#000000',
+              g1: c.g1 || grads.g1,
+              g2: c.g2 || grads.g2,
               image_url: c.image_url || null,
               sort_order: i
             }
@@ -111,17 +115,53 @@ export async function createProduct(req, res, next) {
                 })
               }
             }
+
             await supabaseAdmin.from('product_skus').insert(skuRows)
           }
 
-          return res.status(201).json({ id: product.id, name: product.name })
+          return res.status(201).json({
+            id: product.id,
+            name: product.name,
+            category: product.category
+          })
         }
       } catch (err) {
-        console.warn('Supabase product creation warn:', err.message)
+        console.warn('Supabase product insert fallback:', err.message)
       }
     }
 
-    // Local fallback
+    // Local Store Fallback
+    const localColors = colors.map((c, i) => {
+      const grads = gradientForHex(c.hex)
+      return {
+        id: `c-loc-${Date.now()}-${i}`,
+        code: (c.code || `C${i+1}`).trim().toUpperCase(),
+        name: c.name.trim(),
+        hex: c.hex || '#000000',
+        g1: c.g1 || grads.g1,
+        g2: c.g2 || grads.g2
+      }
+    })
+
+    const localSkuMatrix = {}
+    for (const color of localColors) {
+      for (let i = 0; i < targetSizes.length; i++) {
+        const size = targetSizes[i]
+        const spread = Math.max(0, Number(price_max) - Number(price_min))
+        const priceBump = i >= 4 && spread > 0 ? Math.round(spread * 0.4) : 0
+        const key = `${color.code}-${size}`
+        const customStock = stock_matrix && stock_matrix[key] !== undefined ? Number(stock_matrix[key]) : 10
+
+        localSkuMatrix[key] = {
+          id: `s-${newId}-${key}`,
+          price: Number(price_min) + priceBump,
+          stock: customStock,
+          sku: `DZN-${newId.slice(-4)}-${color.code}-${size}`,
+          available: customStock > 0
+        }
+      }
+    }
+
     const localProduct = {
       id: newId,
       name: name.trim(),
@@ -130,25 +170,20 @@ export async function createProduct(req, res, next) {
       description: description?.trim() || '',
       priceMin: Number(price_min),
       priceMax: Number(price_max),
-      price_min: Number(price_min),
-      price_max: Number(price_max),
       icon: icon || 'jacket',
       is_active: true,
-      colors: colors.map((c, i) => ({
-        id: `c-${Date.now()}-${i}`,
-        code: c.code.trim().toUpperCase(),
-        name: c.name.trim(),
-        hex: c.hex,
-        g1: c.g1 || '#2A2A2A',
-        g2: c.g2 || '#4A4A4A',
-        image_url: c.image_url || null
-      })),
-      skuMatrix: {},
+      colors: localColors,
+      skuMatrix: localSkuMatrix,
       images: {}
     }
 
     localStore.createProduct(localProduct)
-    res.status(201).json({ id: localProduct.id, name: localProduct.name })
+
+    res.status(201).json({
+      id: localProduct.id,
+      name: localProduct.name,
+      cat: localProduct.cat
+    })
   } catch (err) {
     next(err)
   }
@@ -160,41 +195,33 @@ export async function createProduct(req, res, next) {
 export async function updateProduct(req, res, next) {
   try {
     const { id } = req.params
-    const { name, category, description, price_min, price_max, icon, colors, is_active } = req.body
+    const updates = req.body
+
+    const dbUpdates = {}
+    if (updates.name) dbUpdates.name = updates.name.trim()
+    if (updates.category || updates.cat) dbUpdates.category = (updates.category || updates.cat).trim()
+    if (updates.description !== undefined) dbUpdates.description = updates.description.trim()
+    if (updates.price_min !== undefined || updates.priceMin !== undefined) {
+      dbUpdates.price_min = Number(updates.price_min !== undefined ? updates.price_min : updates.priceMin)
+    }
+    if (updates.price_max !== undefined || updates.priceMax !== undefined) {
+      dbUpdates.price_max = Number(updates.price_max !== undefined ? updates.price_max : updates.priceMax)
+    }
+    if (updates.icon) dbUpdates.icon = updates.icon
+    if (updates.cover_image !== undefined) dbUpdates.cover_image = updates.cover_image
+    if (updates.is_active !== undefined) dbUpdates.is_active = Boolean(updates.is_active)
+    dbUpdates.updated_at = new Date().toISOString()
 
     if (supabaseAdmin) {
       try {
-        await supabaseAdmin
-          .from('products')
-          .update({
-            name: name?.trim(),
-            category,
-            description: description?.trim(),
-            price_min: price_min !== undefined ? Number(price_min) : undefined,
-            price_max: price_max !== undefined ? Number(price_max) : undefined,
-            icon: icon || 'jacket',
-            is_active: is_active !== undefined ? is_active : true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', id)
+        await supabaseAdmin.from('products').update(dbUpdates).eq('id', id)
       } catch {
         /* fallback */
       }
     }
 
-    localStore.updateProduct(id, {
-      name,
-      cat: category,
-      category,
-      description,
-      priceMin: price_min !== undefined ? Number(price_min) : undefined,
-      priceMax: price_max !== undefined ? Number(price_max) : undefined,
-      price_min: price_min !== undefined ? Number(price_min) : undefined,
-      price_max: price_max !== undefined ? Number(price_max) : undefined,
-      is_active: is_active !== undefined ? is_active : true
-    })
-
-    res.json({ id, updated: true })
+    const localUpdated = localStore.updateProduct(id, updates)
+    res.json({ id, ...dbUpdates, local: localUpdated })
   } catch (err) {
     next(err)
   }
@@ -206,13 +233,20 @@ export async function updateProduct(req, res, next) {
 export async function deleteProduct(req, res, next) {
   try {
     const { id } = req.params
+    const { hard } = req.query
+
     if (supabaseAdmin) {
       try {
-        await supabaseAdmin.from('products').delete().eq('id', id)
+        if (hard === 'true') {
+          await supabaseAdmin.from('products').delete().eq('id', id)
+        } else {
+          await supabaseAdmin.from('products').update({ is_active: false }).eq('id', id)
+        }
       } catch {
         /* fallback */
       }
     }
+
     localStore.deleteProduct(id)
     res.json({ success: true })
   } catch (err) {

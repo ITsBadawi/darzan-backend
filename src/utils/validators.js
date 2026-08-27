@@ -35,7 +35,8 @@ export function validateOrder(body) {
     errors.push('العنوان مطلوب (5 حروف على الأقل)')
   }
 
-  if (typeof body.total !== 'number' || body.total <= 0 || isNaN(body.total)) {
+  const total = typeof body.total === 'number' ? body.total : parseFloat(body.total)
+  if (isNaN(total) || total <= 0) {
     errors.push('إجمالي السعر يجب أن يكون رقماً موجباً')
   }
 
@@ -45,7 +46,9 @@ export function validateOrder(body) {
 
   if (body.items) {
     for (const item of body.items) {
-      if (!item.product_name || !item.size || !item.qty || item.qty < 1 || !item.unit_price || item.unit_price <= 0) {
+      const name = item.product_name || item.name
+      const price = item.unit_price || item.price
+      if (!name || !item.size || !item.qty || item.qty < 1 || !price || price <= 0) {
         errors.push('بيانات أحد المنتجات غير مكتملة أو غير صالحة')
         break
       }
@@ -56,7 +59,7 @@ export function validateOrder(body) {
 }
 
 /**
- * Validate product input from the admin panel.
+ * Validate product input from the admin panel (supports both camelCase and snake_case).
  */
 export function validateProduct(body) {
   const errors = []
@@ -65,15 +68,18 @@ export function validateProduct(body) {
     errors.push('اسم المنتج مطلوب')
   }
 
-  if (!body.category) {
+  const cat = body.category || body.cat
+  if (!cat) {
     errors.push('التصنيف مطلوب')
   }
 
-  if (!body.price_min || body.price_min < 0) {
+  const pMin = body.price_min !== undefined ? body.price_min : body.priceMin
+  if (pMin === undefined || pMin < 0) {
     errors.push('أقل سعر مطلوب')
   }
 
-  if (!body.price_max || body.price_max < 0) {
+  const pMax = body.price_max !== undefined ? body.price_max : body.priceMax
+  if (pMax === undefined || pMax < 0) {
     errors.push('أعلى سعر مطلوب')
   }
 
@@ -88,7 +94,7 @@ export function validateProduct(body) {
  * Lightens a hex color — matching the frontend's colorUtils.js logic
  */
 export function lightenHex(hex, amount = 0.55) {
-  const clean = hex.replace('#', '')
+  const clean = String(hex || '#000000').replace('#', '')
   const num = parseInt(
     clean.length === 3
       ? clean.split('').map((c) => c + c).join('')

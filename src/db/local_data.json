@@ -325,6 +325,31 @@
   ],
   "orders": [
     {
+      "id": "ord-1787793609542",
+      "orderNumber": "DZN-5LQEV04",
+      "customerName": "أحمد محمود التجريبي",
+      "customerPhone": "07801234567",
+      "province": "بغداد",
+      "address": "شارع المنصور، تقاطع الرواد",
+      "notes": "يرجى التوصيل بعد الظهر",
+      "total": 50000,
+      "status": "معلق",
+      "createdAt": "2026-08-27T01:20:09.542Z",
+      "items": [
+        {
+          "lineId": "line-ord-1787793609542-0",
+          "productId": "11111111-1111-1111-1111-111111111101",
+          "name": "كنزة شتوية صوف",
+          "colorName": "أحمر",
+          "colorHex": "#8B2E1F",
+          "size": "L",
+          "sku": "DZN-01-RED-L",
+          "qty": 2,
+          "price": 25000
+        }
+      ]
+    },
+    {
       "id": "ord-1787700834976",
       "orderNumber": "DZN-X4F4WUX",
       "customerName": "ahmed mustafa",
