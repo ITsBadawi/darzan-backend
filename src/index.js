@@ -24,11 +24,12 @@ const PORT = process.env.PORT || 3001
 
 // --------------- Global Middleware ---------------
 
-// Security headers (configured to allow images and fonts)
+// Security headers (configured to allow scripts, styles, images, and fonts)
 app.use(
   helmet({
     contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false
   })
 )
 
@@ -48,7 +49,7 @@ app.use(
           return cb(null, true)
         }
       }
-      cb(new Error('Not allowed by CORS'))
+      cb(null, true) // Allow in production for smooth fullstack deployment
     },
     credentials: true
   })
@@ -103,10 +104,26 @@ const clientDistCandidates = [
 const clientDistPath = clientDistCandidates.find((p) => fs.existsSync(p))
 
 if (clientDistPath) {
-  app.use(express.static(clientDistPath))
+  // Serve static assets with appropriate caching
+  app.use(
+    express.static(clientDistPath, {
+      maxAge: '1y',
+      immutable: true,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+        }
+      }
+    })
+  )
+
   // Fallback for Single Page Application (SPA) client-side routing
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next()
+    if (req.path.startsWith('/assets/')) {
+      return res.status(404).send('Asset not found')
+    }
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
     res.sendFile(path.join(clientDistPath, 'index.html'))
   })
   console.log(`🌐 Serving frontend from: ${clientDistPath}`)
@@ -122,4 +139,3 @@ app.listen(PORT, () => {
 })
 
 export default app
-
