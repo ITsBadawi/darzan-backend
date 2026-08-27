@@ -6,22 +6,35 @@ import QuickAddModal from './QuickAddModal.jsx'
 import Toast, { useToast } from './Toast.jsx'
 
 export default function ProductCard({ product }) {
-  const isFav = useFavoritesStore((s) => s.ids.includes(product.id))
+  const isFav = useFavoritesStore((s) => s.ids.includes(product?.id))
   const toggle = useFavoritesStore((s) => s.toggle)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const { message, showToast } = useToast()
 
-  const WatermarkIcon = WATERMARK_ICONS[product.icon]
-  const g1 = product.colors[0]?.g1 ?? '#E7DEC8'
-  const g2 = product.colors[0]?.g2 ?? '#D8CBA9'
+  if (!product) return null
+
+  const colors = Array.isArray(product.colors) ? product.colors : []
+  const firstColor = colors[0] || {}
+  const WatermarkIcon = product.icon ? WATERMARK_ICONS[product.icon] : null
+  const g1 = firstColor.g1 ?? '#E7DEC8'
+  const g2 = firstColor.g2 ?? '#D8CBA9'
+
+  const minPrice = typeof product.priceMin === 'number' ? product.priceMin : (typeof product.price_min === 'number' ? product.price_min : 0)
+  const maxPrice = typeof product.priceMax === 'number' ? product.priceMax : (typeof product.price_max === 'number' ? product.price_max : minPrice)
 
   const priceLabel =
-    product.priceMin === product.priceMax
-      ? `${product.priceMin.toLocaleString('ar')} د.ع`
-      : `${product.priceMin.toLocaleString('ar')} – ${product.priceMax.toLocaleString('ar')} د.ع`
+    minPrice === maxPrice
+      ? `${minPrice.toLocaleString('ar')} د.ع`
+      : `${minPrice.toLocaleString('ar')} – ${maxPrice.toLocaleString('ar')} د.ع`
 
-  const firstColorId = product.colors[0]?.id
-  const mainImage = product.cover_image || product.coverImage || product.image_url || product.images?.[firstColorId]?.[0]?.url || product.images?.['default']?.[0]?.url
+  const firstColorId = firstColor.id
+  const mainImage =
+    product.cover_image ||
+    product.coverImage ||
+    product.image_url ||
+    (firstColorId && product.images?.[firstColorId]?.[0]?.url) ||
+    product.images?.['default']?.[0]?.url ||
+    product.images?.['all']?.[0]?.url
 
   return (
     <>
@@ -31,13 +44,13 @@ export default function ProductCard({ product }) {
             {mainImage && (
               <img
                 src={mainImage}
-                alt={product.name}
+                alt={product.name || 'منتج'}
                 loading="lazy"
                 decoding="async"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
               />
             )}
-            <div className="cat-tag">{product.cat}</div>
+            <div className="cat-tag">{product.cat || product.category || 'عام'}</div>
             <button
               className={`fav${isFav ? ' active' : ''}`}
               onClick={(e) => { e.preventDefault(); toggle(product.id) }}
@@ -62,8 +75,8 @@ export default function ProductCard({ product }) {
             <div className="pname">{product.name}</div>
             <div className="price">{priceLabel}</div>
             <div className="colordots">
-              {product.colors.map((c) => (
-                <span key={c.code} style={{ background: c.hex }} />
+              {colors.map((c, idx) => (
+                <span key={c.code || c.id || idx} style={{ background: c.hex || '#888' }} />
               ))}
             </div>
           </div>

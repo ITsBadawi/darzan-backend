@@ -25,8 +25,9 @@ export default function Header() {
     ? (settings.announce_enabled === 'true' || settings.announce_enabled === true)
     : true
 
-  const navCats = categories.filter((c) => c !== 'الكل').slice(0, 5)
-
+  const navCats = (Array.isArray(categories) ? categories : [])
+    .filter((c) => c && c !== 'الكل')
+    .slice(0, 5)
 
   return (
     <>

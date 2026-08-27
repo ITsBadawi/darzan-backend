@@ -30,7 +30,7 @@ export default function CategoryStories() {
           ? JSON.parse(settings.custom_categories_detail)
           : settings.custom_categories_detail
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const filtered = parsed.filter((c) => c.show_on_home !== false)
+          const filtered = parsed.filter((c) => c && c.show_on_home !== false)
           if (filtered.length > 0) {
             return filtered.map((c) => ({
               cat: c.name,
@@ -45,6 +45,8 @@ export default function CategoryStories() {
     }
     return DEFAULT_FEATURED
   }, [settings])
+
+  const safeProducts = Array.isArray(products) ? products : []
 
   return (
     <section className="stories-section">
@@ -62,7 +64,7 @@ export default function CategoryStories() {
 
         {/* Dynamic Category Stories */}
         {categories.map(({ cat, label, image_url }) => {
-          const count = products.filter((p) => p.cat === label).length
+          const count = safeProducts.filter((p) => p && (p.cat === label || p.category === label)).length
           return (
             <Link key={cat} className="story-item" to={`/catalog?cat=${encodeURIComponent(label)}`}>
               <div className="story-ring">

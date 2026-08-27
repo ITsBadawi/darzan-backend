@@ -38,11 +38,13 @@ export default function SearchModal({ isOpen, onClose }) {
 
   const query = q.trim().toLowerCase()
   const results = query
-    ? products.filter(
+    ? (Array.isArray(products) ? products : []).filter(
         (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.cat.toLowerCase().includes(query) ||
-          p.description?.toLowerCase().includes(query)
+          p &&
+          ((p.name && String(p.name).toLowerCase().includes(query)) ||
+          (p.cat && String(p.cat).toLowerCase().includes(query)) ||
+          (p.category && String(p.category).toLowerCase().includes(query)) ||
+          (p.description && String(p.description).toLowerCase().includes(query)))
       )
     : []
 
@@ -97,10 +99,12 @@ export default function SearchModal({ isOpen, onClose }) {
               <div className="results-count">تم العثور على {results.length} منتج:</div>
               {results.slice(0, 8).map((p) => {
                 const img = p.cover_image || p.coverImage || p.image_url || p.colors?.[0]?.image_url
+                const minPrice = typeof p.priceMin === 'number' ? p.priceMin : 0
+                const maxPrice = typeof p.priceMax === 'number' ? p.priceMax : minPrice
                 const priceStr =
-                  p.priceMin === p.priceMax
-                    ? `${p.priceMin.toLocaleString('ar')} د.ع`
-                    : `${p.priceMin.toLocaleString('ar')} – ${p.priceMax.toLocaleString('ar')} د.ع`
+                  minPrice === maxPrice
+                    ? `${minPrice.toLocaleString('ar')} د.ع`
+                    : `${minPrice.toLocaleString('ar')} – ${maxPrice.toLocaleString('ar')} د.ع`
 
                 return (
                   <div key={p.id} className="search-result-item" onClick={() => handleSelectProduct(p.id)}>
@@ -114,7 +118,7 @@ export default function SearchModal({ isOpen, onClose }) {
                     />
                     <div className="result-info">
                       <div className="result-title">{p.name}</div>
-                      <div className="result-cat">{p.cat}</div>
+                      <div className="result-cat">{p.cat || p.category}</div>
                     </div>
                     <div className="result-price">{priceStr}</div>
                   </div>

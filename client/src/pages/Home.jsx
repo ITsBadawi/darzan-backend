@@ -50,37 +50,14 @@ export default function Home() {
   const promoLink = settings?.promo_link || '/catalog'
   const promoBg = settings?.promo_bg || '#8B2E1F'
 
-  const featuredCats = useMemo(() => {
-    if (settings?.custom_categories_detail) {
-      try {
-        const parsed = typeof settings.custom_categories_detail === 'string'
-          ? JSON.parse(settings.custom_categories_detail)
-          : settings.custom_categories_detail
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const homeFiltered = parsed.filter((c) => c.show_on_home !== false)
-          if (homeFiltered.length > 0) {
-            return homeFiltered.map((c) => ({
-              cat: c.name,
-              label: c.name,
-              g1: c.g1 || '#2A2A2A',
-              g2: c.g2 || '#4A4A4A',
-              image_url: c.image_url && c.image_url.trim() ? c.image_url : DEFAULT_CATEGORY_IMAGES[c.name] || ''
-            }))
-          }
-        }
-      } catch {
-        /* fallback */
-      }
-    }
-    return DEFAULT_FEATURED
-  }, [settings])
+  const safeProducts = Array.isArray(products) ? products : []
 
   // Filter products by tab selection
   const displayedProducts = (() => {
-    if (activeTab === 'newest') return products.slice(0, 6)
-    if (activeTab === 'discounted') return products.filter((p) => p.priceMin < p.priceMax || p.priceMin <= 25000).slice(0, 6)
+    if (activeTab === 'newest') return safeProducts.slice(0, 6)
+    if (activeTab === 'discounted') return safeProducts.filter((p) => p && (p.priceMin < p.priceMax || p.priceMin <= 25000)).slice(0, 6)
     // Default bestsellers:
-    return products.slice(2, 8).length ? products.slice(2, 8) : products.slice(0, 6)
+    return safeProducts.slice(2, 8).length ? safeProducts.slice(2, 8) : safeProducts.slice(0, 6)
   })()
 
   return (
@@ -127,10 +104,10 @@ export default function Home() {
       </div>
 
       <div className="grid grid--home" style={{ paddingTop: 16 }}>
-        {loading && products.length === 0 ? (
+        {loading && safeProducts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-dim)', gridColumn: '1 / -1' }}>جاري تحميل المنتجات...</div>
         ) : (
-          displayedProducts.map((p) => <ProductCard key={p.id} product={p} />)
+          displayedProducts.map((p) => <ProductCard key={p?.id} product={p} />)
         )}
       </div>
 

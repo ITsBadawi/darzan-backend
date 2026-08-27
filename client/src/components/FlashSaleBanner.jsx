@@ -15,8 +15,10 @@ export default function FlashSaleBanner() {
 
   const [targetTime, setTargetTime] = useState(() => {
     if (flashEnd) {
-      const parsed = new Date(flashEnd).getTime()
-      if (!isNaN(parsed) && parsed > Date.now()) return parsed
+      try {
+        const parsed = new Date(flashEnd).getTime()
+        if (!isNaN(parsed) && parsed > Date.now()) return parsed
+      } catch { /* fallback */ }
     }
     return Date.now() + 18 * 3600 * 1000
   })
@@ -25,10 +27,12 @@ export default function FlashSaleBanner() {
 
   useEffect(() => {
     if (flashEnd) {
-      const parsed = new Date(flashEnd).getTime()
-      if (!isNaN(parsed) && parsed > Date.now()) {
-        setTargetTime(parsed)
-      }
+      try {
+        const parsed = new Date(flashEnd).getTime()
+        if (!isNaN(parsed) && parsed > Date.now()) {
+          setTargetTime(parsed)
+        }
+      } catch { /* fallback */ }
     }
   }, [flashEnd])
 
@@ -54,7 +58,7 @@ export default function FlashSaleBanner() {
 
   if (!enabled) return null
 
-  const formatNum = (num) => String(num).padStart(2, '0')
+  const formatNum = (num) => String(num || 0).padStart(2, '0')
 
   return (
     <div className="flash-sale-wrapper">

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { Component, lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import Header from './components/Header.jsx'
@@ -23,6 +23,54 @@ const AdminProductForm = lazy(() => import('./admin/pages/ProductForm.jsx'))
 const AdminOrders = lazy(() => import('./admin/pages/Orders.jsx'))
 const AdminSettings = lazy(() => import('./admin/pages/Settings.jsx'))
 
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error, info) {
+    console.error('App ErrorBoundary caught:', error, info)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ display: 'grid', placeItems: 'center', minHeight: '80vh', padding: 24, textAlign: 'center' }}>
+          <div style={{ maxWidth: 420 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, color: '#141414' }}>
+              عذراً، حدث خطأ أثناء التحميل
+            </h2>
+            <p style={{ fontSize: 14, color: '#666', marginBottom: 20 }}>
+              يرجى إعادة تحميل الصفحة أو المحاولة لاحقاً
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                background: '#8B2942',
+                color: '#fff',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: 999,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              إعادة التحميل ↻
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 function PageFallback() {
   return (
     <div style={{ display: 'grid', placeItems: 'center', minHeight: '60vh', color: 'var(--text-dim, #888)', fontSize: 14 }}>
@@ -43,7 +91,7 @@ function StorefrontLayout({ children }) {
 
 export default function App() {
   return (
-    <>
+    <ErrorBoundary>
       <ScrollToTop />
       <Suspense fallback={<PageFallback />}>
         <Routes>
@@ -68,6 +116,6 @@ export default function App() {
           </Route>
         </Routes>
       </Suspense>
-    </>
+    </ErrorBoundary>
   )
 }

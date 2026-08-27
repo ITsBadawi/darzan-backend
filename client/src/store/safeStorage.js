@@ -1,18 +1,39 @@
-export const safeStorage = {
+import { createJSONStorage } from 'zustand/middleware'
+
+const memoryStorage = {}
+
+const customStateStorage = {
   getItem: (name) => {
     try {
-      const raw = localStorage.getItem(name)
-      if (raw === null) return null
-      return JSON.parse(raw)
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return window.localStorage.getItem(name)
+      }
+      return memoryStorage[name] || null
     } catch {
-      try { localStorage.removeItem(name) } catch { /* ignore */ }
-      return null
+      return memoryStorage[name] || null
     }
   },
   setItem: (name, value) => {
-    localStorage.setItem(name, JSON.stringify(value))
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(name, value)
+      }
+      memoryStorage[name] = value
+    } catch {
+      memoryStorage[name] = value
+    }
   },
   removeItem: (name) => {
-    localStorage.removeItem(name)
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(name)
+      }
+      delete memoryStorage[name]
+    } catch {
+      delete memoryStorage[name]
+    }
   }
 }
+
+export const safeStorage = createJSONStorage(() => customStateStorage)
+export default safeStorage

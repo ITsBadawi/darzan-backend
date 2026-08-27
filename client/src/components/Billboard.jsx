@@ -21,7 +21,7 @@ export default function Billboard() {
           try {
             const parsed = typeof data.hero_slides === 'string' ? JSON.parse(data.hero_slides) : data.hero_slides
             if (Array.isArray(parsed) && parsed.length > 0) {
-              setSlides(parsed.map((s, idx) => ({ ...s, key: s.key || `custom-s${idx}` })))
+              setSlides(parsed.map((s, idx) => ({ ...s, key: s?.key || `custom-s${idx}` })))
             }
           } catch { /* use fallback */ }
         }
@@ -36,15 +36,19 @@ export default function Billboard() {
   }, [slides.length])
 
   function goTo(i) {
+    if (slides.length === 0) return
     setIndex((i + slides.length) % slides.length)
   }
 
   function onTouchStart(e) {
-    startXRef.current = e.touches[0].clientX
+    if (e.touches && e.touches[0]) {
+      startXRef.current = e.touches[0].clientX
+    }
     clearInterval(timerRef.current)
   }
 
   function onTouchEnd(e) {
+    if (!e.changedTouches || !e.changedTouches[0]) return
     const dx = e.changedTouches[0].clientX - startXRef.current
     if (dx > 40) goTo(index - 1)
     else if (dx < -40) goTo(index + 1)
@@ -52,6 +56,8 @@ export default function Billboard() {
       timerRef.current = setInterval(() => setIndex((i) => (i + 1) % slides.length), 5000)
     }
   }
+
+  const safeSlides = Array.isArray(slides) && slides.length > 0 ? slides : DEFAULT_SLIDES
 
   return (
     <div className="billboard-wrap">
@@ -62,29 +68,29 @@ export default function Billboard() {
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          {slides.map((s) => {
-            const hasBg = Boolean(s.bg_url)
+          {safeSlides.map((s, idx) => {
+            const hasBg = Boolean(s?.bg_url)
             const slideStyle = hasBg
               ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${s.bg_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
               : {}
             return (
-              <div className={`slide ${s.key || ''}`} key={s.key} style={slideStyle}>
+              <div className={`slide ${s?.key || ''}`} key={s?.key || idx} style={slideStyle}>
                 <div className="slide-content">
-                  {s.tag && <span className="tag-badge">{s.tag}</span>}
-                  <h3 className="display">{s.title}</h3>
-                  {s.desc && <p>{s.desc}</p>}
-                  <Link className="cta" to={s.to || '/catalog'}>{s.cta || 'تصفّح الآن'}</Link>
+                  {s?.tag && <span className="tag-badge">{s.tag}</span>}
+                  <h3 className="display">{s?.title || 'درازن لتجارة الجملة'}</h3>
+                  {s?.desc && <p>{s.desc}</p>}
+                  <Link className="cta" to={s?.to || '/catalog'}>{s?.cta || 'تصفّح الآن'}</Link>
                 </div>
                 {!hasBg && <div className="slide-visual" aria-hidden="true" />}
               </div>
             )
           })}
         </div>
-        {slides.length > 1 && (
+        {safeSlides.length > 1 && (
           <div className="hero-nav">
-            {slides.map((s, i) => (
+            {safeSlides.map((s, i) => (
               <button
-                key={s.key}
+                key={s?.key || i}
                 className={`dot${i === index ? ' active' : ''}`}
                 onClick={() => goTo(i)}
                 aria-label={`الشريحة ${i + 1}`}
@@ -96,4 +102,3 @@ export default function Billboard() {
     </div>
   )
 }
-
