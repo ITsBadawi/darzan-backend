@@ -1,4 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
+import WebSocket from 'ws'
+
+// Ensure WebSocket exists on globalThis for Supabase in all Node.js versions
+if (typeof globalThis.WebSocket === 'undefined') {
+  globalThis.WebSocket = WebSocket
+}
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
