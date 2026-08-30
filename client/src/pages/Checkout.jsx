@@ -81,7 +81,9 @@ export default function Checkout() {
           size: item.size,
           sku_code: item.sku || item.sku_code,
           qty: item.qty,
-          unit_price: item.price || item.unit_price
+          unit_price: item.price || item.unit_price,
+          unit_type: item.unit_type || item.unitType || 'piece',
+          unit_name: item.unit_name || item.unitName || (item.unit_type === 'dozen' || item.unitType === 'dozen' ? 'درزن' : 'قطعة')
         })),
         total
       })
@@ -189,6 +191,8 @@ export default function Checkout() {
                 const product = products.find((p) => p.id === (item.productId || item.product_id))
                 const colorObj = product?.colors?.find((c) => c.name === item.colorName || c.code === item.colorHex)
                 const itemImg = item.image || item.image_url || item.cover_image || colorObj?.image_url || product?.cover_image || product?.coverImage || product?.image_url
+                const isDozen = item.unit_type === 'dozen' || item.unitType === 'dozen'
+                const unitName = item.unit_name || item.unitName || (isDozen ? 'درزن' : 'قطعة')
 
                 return (
                   <div className="sum-item" key={item.lineId}>
@@ -204,7 +208,10 @@ export default function Checkout() {
                     </div>
                     <div className="txt">
                       <div className="n">{item.name || item.product_name}</div>
-                      <div className="m">{item.colorName || item.color_name} · {item.size} · ×{item.qty}</div>
+                      <div className="m">
+                        {item.colorName || item.color_name} · {item.size} · ×{item.qty} {unitName}
+                        {isDozen && <span style={{ color: 'var(--text-muted)' }}> ({item.qty * 12} قطعة)</span>}
+                      </div>
                     </div>
                     <div className="p">{((item.price || item.unit_price) * item.qty).toLocaleString('ar')} د.ع</div>
                   </div>

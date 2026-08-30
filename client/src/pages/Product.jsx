@@ -54,6 +54,15 @@ export default function Product() {
 }
 
 function ProductView({ product }) {
+  const saleType = product.sale_type || product.saleType || 'both'
+  const pricePiece = product.price_piece !== undefined ? product.price_piece : (product.pricePiece !== undefined ? product.pricePiece : (product.priceMin || product.price_min || 0))
+  const priceDozen = product.price_dozen !== undefined ? product.price_dozen : (product.priceDozen !== undefined ? product.priceDozen : (pricePiece * 12))
+  const minPieceQty = Math.max(1, Number(product.min_piece_qty || product.minPieceQty || 1))
+  const minDozenQty = Math.max(1, Number(product.min_dozen_qty || product.minDozenQty || 1))
+
+  const [unit, setUnit] = useState(() => (saleType === 'dozen' ? 'dozen' : 'piece'))
+  const currentMoq = unit === 'dozen' ? minDozenQty : minPieceQty
+
   // Use API-provided skuMatrix if available, otherwise generate locally
   const matrix = useMemo(() => {
     if (product.skuMatrix && Object.keys(product.skuMatrix).length > 0) {
@@ -68,20 +77,26 @@ function ProductView({ product }) {
         const spread = Math.max(0, product.priceMax - product.priceMin)
         const priceBump = i >= 4 ? (spread > 0 ? Math.round(spread * 0.4) : 0) : 0
         m[key] = {
-          price: product.priceMin + priceBump,
+          price: (product.priceMin || pricePiece) + priceBump,
           stock: 10,
           sku: `DZN-${product.id}-${color.code}-${size}`
         }
       })
     })
     return m
-  }, [product])
+  }, [product, pricePiece])
 
   const [selectedColor, setSelectedColor] = useState(null)
   const [selectedSize, setSelectedSize] = useState(null)
   const [activeThumb, setActiveThumb] = useState(0)
-  const [qty, setQty] = useState(1)
+  const [qty, setQty] = useState(currentMoq)
   const { message, showToast } = useToast()
+
+  function switchUnit(newUnit) {
+    setUnit(newUnit)
+    const targetMoq = newUnit === 'dozen' ? minDozenQty : minPieceQty
+    setQty(targetMoq)
+  }
 
   const addItem = useCartStore((s) => s.addItem)
   const isFav = useFavoritesStore((s) => s.ids.includes(product.id))
@@ -122,9 +137,13 @@ function ProductView({ product }) {
 
   const currentImg = imageList[activeThumb] || imageList[0]
 
+  const currentUnitPrice = unit === 'dozen' ? priceDozen : (sku ? sku.price : pricePiece)
+
   function handleAddToCart() {
     if (!sku) return
-    const lineId = `${product.id}-${selectedColor}-${selectedSize}`
+    const lineId = `${product.id}-${selectedColor}-${selectedSize}-${unit}`
+    const unitName = unit === 'dozen' ? 'درزن' : 'قطعة'
+
     addItem({
       lineId,
       productId: product.id,
@@ -141,14 +160,21 @@ function ProductView({ product }) {
       g2: colorObj.g2,
       size: selectedSize,
       qty,
-      price: sku.price,
-      unit_price: sku.price,
+      unit_type: unit,
+      unitType: unit,
+      unit_name: unitName,
+      unitName: unitName,
+      min_qty: currentMoq,
+      price: currentUnitPrice,
+      unit_price: currentUnitPrice,
       sku: sku.sku,
       sku_code: sku.sku,
       sku_id: sku.id || null
     })
-    showToast(`تمت إضافة ${qty} × ${product.name} (${colorObj.name} / ${selectedSize}) إلى السلة`)
-    setQty(1)
+
+    const unitExtra = unit === 'dozen' ? ` (${qty * 12} قطعة)` : ''
+    showToast(`تمت إضافة ${qty} ${unitName}${unitExtra} × ${product.name} (${colorObj.name} / ${selectedSize}) إلى السلة`)
+    setQty(currentMoq)
   }
 
   const galleryStyle = currentImg
@@ -157,9 +183,17 @@ function ProductView({ product }) {
       ? { background: `linear-gradient(150deg, ${colorObj.g1} 0%, ${colorObj.g2} 100%)` }
       : { background: `linear-gradient(150deg, ${product.colors[0].g1} 0%, ${product.colors[0].g2} 100%)` }
 
-  const priceLabel = sku
-    ? `${sku.price.toLocaleString('ar')} د.ع`
-    : `${product.priceMin.toLocaleString('ar')} – ${product.priceMax.toLocaleString('ar')} د.ع (حسب المقاس)`
+  let priceLabel = ''
+  if (unit === 'dozen') {
+    priceLabel = `${priceDozen.toLocaleString('ar')} د.ع`
+  } else {
+    priceLabel = sku
+      ? `${sku.price.toLocaleString('ar')} د.ع`
+      : `${(product.priceMin || pricePiece).toLocaleString('ar')} – ${(product.priceMax || pricePiece).toLocaleString('ar')} د.ع (حسب المقاس)`
+  }
+
+  const pieces12Price = (sku ? sku.price : pricePiece) * 12
+  const dozenSavings = pieces12Price - priceDozen
 
   const allProducts = useProductsStore((s) => s.products)
   const related = allProducts.filter((p) => p.cat === product.cat && p.id !== product.id).slice(0, 4)
@@ -221,7 +255,48 @@ function ProductView({ product }) {
             {sku ? `الكود الداخلي: ${sku.sku}` : 'اختر اللون والمقاس لعرض التفاصيل'}
           </div>
 
-          <div className="p-price">{priceLabel}</div>
+          {/* Unit selection & MOQ notice */}
+          {saleType === 'both' ? (
+            <div className="unit-switch-wrap">
+              <div className="unit-switch-header">
+                <span>طريقة الشراء:</span>
+                {unit === 'dozen' && dozenSavings > 0 && (
+                  <span className="price-saving-tag">توفير {dozenSavings.toLocaleString('ar')} د.ع بالدرزن</span>
+                )}
+              </div>
+              <div className="unit-switch-group">
+                <button
+                  type="button"
+                  className={`unit-switch-btn${unit === 'piece' ? ' active' : ''}`}
+                  onClick={() => switchUnit('piece')}
+                >
+                  <span className="btn-title">👕 بالقطعة (مفرد)</span>
+                  <span className="btn-sub">{minPieceQty > 1 ? `أقل طلب: ${minPieceQty} قطع` : 'طلب بالمفرد'}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`unit-switch-btn${unit === 'dozen' ? ' active' : ''}`}
+                  onClick={() => switchUnit('dozen')}
+                >
+                  <span className="btn-title">📦 بالدرزن (12 قطعة)</span>
+                  <span className="btn-sub">{minDozenQty > 1 ? `أقل طلب: ${minDozenQty} درازن` : 'سعر الجملة'}</span>
+                </button>
+              </div>
+            </div>
+          ) : saleType === 'dozen' ? (
+            <div className="unit-notice dozen-only">
+              📦 <strong>يباع بالدرزن فقط:</strong> كل درزن يحتوي على 12 قطعة {minDozenQty > 1 && `(الحد الأدنى للطلب: ${minDozenQty} درازن)`}
+            </div>
+          ) : (
+            <div className="unit-notice piece-only">
+              👕 <strong>شراء بالمفرد (بالقطعة):</strong> {minPieceQty > 1 ? `الحد الأدنى للطلب: ${minPieceQty} قطع` : 'متاح للشراء بالقطعة'}
+            </div>
+          )}
+
+          <div className="p-price">
+            {priceLabel} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)' }}>({unit === 'dozen' ? 'سعر الدرزن' : 'سعر القطعة'})</span>
+          </div>
+
           <div className={`stock-msg ${sku ? (sku.stock > 5 ? 'ok' : 'low') : 'pick'}`}>
             {sku
               ? sku.stock > 5 ? 'متوفر في المخزون ✓' : `الكمية محدودة — تبقّى ${sku.stock} فقط`
@@ -238,13 +313,26 @@ function ProductView({ product }) {
           />
 
           <div className="qty-row">
-            <h4 style={{ fontSize: 13.5, fontWeight: 600 }}>الكمية</h4>
-            <QtyStepper qty={qty} onChange={setQty} max={sku?.stock} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h4 style={{ fontSize: 13.5, fontWeight: 600, margin: 0 }}>الكمية</h4>
+              {currentMoq > 1 && (
+                <span className="moq-tag">
+                  الحد الأدنى: {currentMoq} {unit === 'dozen' ? 'درزن' : 'قطعة'}
+                </span>
+              )}
+            </div>
+            <QtyStepper
+              qty={qty}
+              min={currentMoq}
+              onChange={setQty}
+              max={unit === 'dozen' ? Math.max(1, Math.floor((sku?.stock || 120) / 12)) : sku?.stock}
+              unitLabel={unit === 'dozen' ? 'درزن' : 'قطعة'}
+            />
           </div>
 
           <div className="action-row">
             <button className="btn-cart" disabled={!sku} onClick={handleAddToCart}>
-              أضف إلى السلة
+              أضف {qty} {unit === 'dozen' ? 'درزن' : 'قطعة'} إلى السلة ({(currentUnitPrice * qty).toLocaleString('ar')} د.ع)
             </button>
           </div>
 

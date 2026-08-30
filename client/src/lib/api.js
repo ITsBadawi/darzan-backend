@@ -149,6 +149,14 @@ export const api = {
 
   getCategories: () => request('/api/products/categories'),
 
+  // ─── Suppliers (Public / General) ──────────────────────
+  getSuppliers: (onlyActive = false) => {
+    const params = onlyActive ? '?active=true' : ''
+    return request(`/api/suppliers${params}`)
+  },
+
+  getSupplier: (id) => request(`/api/suppliers/${id}`),
+
   // ─── Orders (Public) ──────────────────────────────────
   createOrder: (orderData) =>
     request('/api/orders', {
@@ -174,6 +182,27 @@ export const api = {
   // ─── Admin: Dashboard ─────────────────────────────────
   getDashboard: () => request('/api/admin/dashboard'),
 
+  // ─── Admin: Suppliers ─────────────────────────────────
+  getAdminSuppliers: (onlyActive = false) => {
+    const params = onlyActive ? '?active=true' : ''
+    return request(`/api/admin/suppliers${params}`)
+  },
+
+  createSupplier: (data) =>
+    request('/api/admin/suppliers', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  updateSupplier: (id, data) =>
+    request(`/api/admin/suppliers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    }),
+
+  deleteSupplier: (id) =>
+    request(`/api/admin/suppliers/${id}`, { method: 'DELETE' }),
+
   // ─── Admin: Orders ────────────────────────────────────
   getOrders: (status) => {
     const params = status && status !== 'الكل' ? `?status=${encodeURIComponent(status)}` : ''
@@ -190,7 +219,10 @@ export const api = {
     request(`/api/admin/orders/${id}`, { method: 'DELETE' }),
 
   // ─── Admin: Products ──────────────────────────────────
-  getAdminProducts: () => request('/api/admin/products'),
+  getAdminProducts: (supplierId) => {
+    const params = supplierId && supplierId !== 'الكل' ? `?supplier_id=${encodeURIComponent(supplierId)}` : ''
+    return request(`/api/admin/products${params}`)
+  },
 
   createProduct: (data) =>
     request('/api/admin/products', {

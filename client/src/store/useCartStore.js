@@ -23,7 +23,15 @@ export const useCartStore = create(
       changeQty: (lineId, delta) =>
         set((state) => ({
           items: state.items
-            .map((i) => (i.lineId === lineId ? { ...i, qty: i.qty + delta } : i))
+            .map((i) => {
+              if (i.lineId === lineId) {
+                const min = Math.max(1, Number(i.min_qty) || 1)
+                const newQty = i.qty + delta
+                if (newQty < min) return i
+                return { ...i, qty: newQty }
+              }
+              return i
+            })
             .filter((i) => i.qty > 0)
         })),
 

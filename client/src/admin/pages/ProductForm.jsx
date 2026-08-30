@@ -29,11 +29,37 @@ export default function ProductForm() {
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES)
   const [newCat, setNewCat] = useState('')
 
+  // Suppliers state
+  const [suppliers, setSuppliers] = useState([])
+  const [loadingSuppliers, setLoadingSuppliers] = useState(true)
+  const [quickSupplierModal, setQuickSupplierModal] = useState(false)
+  const [quickForm, setQuickForm] = useState({ supplier_code: '', name: '', phone: '', notes: '' })
+  const [quickSaving, setQuickSaving] = useState(false)
+  const [quickError, setQuickError] = useState('')
+
   useEffect(() => {
     if (products.length === 0) {
       useProductsStore.getState().fetchProducts()
     }
   }, [products.length])
+
+  async function loadSuppliers() {
+    try {
+      setLoadingSuppliers(true)
+      const data = await api.getSuppliers(true)
+      if (Array.isArray(data) && data.length > 0) {
+        setSuppliers(data)
+      }
+    } catch (err) {
+      console.warn('Could not load suppliers:', err)
+    } finally {
+      setLoadingSuppliers(false)
+    }
+  }
+
+  useEffect(() => {
+    loadSuppliers()
+  }, [])
 
   useEffect(() => {
     api.getPublicSettings()
@@ -55,8 +81,14 @@ export default function ProductForm() {
 
   const [form, setForm] = useState(() => ({
     name: '',
+    supplier_id: '',
     cat: FALLBACK_CATEGORIES[0],
     description: '',
+    sale_type: 'both',
+    price_piece: '',
+    price_dozen: '',
+    min_piece_qty: '1',
+    min_dozen_qty: '1',
     priceMin: '',
     priceMax: '',
     icon: 'jacket',
@@ -73,12 +105,24 @@ export default function ProductForm() {
   // Sync form state when editing an existing product
   useEffect(() => {
     if (isEdit && existing) {
+      const pricePiece = existing.price_piece !== undefined ? existing.price_piece : (existing.pricePiece !== undefined ? existing.pricePiece : (existing.priceMin || existing.price_min || ''))
+      const priceDozen = existing.price_dozen !== undefined ? existing.price_dozen : (existing.priceDozen !== undefined ? existing.priceDozen : (pricePiece ? Number(pricePiece) * 12 : ''))
+      const saleType = existing.sale_type || existing.saleType || 'both'
+      const minPiece = existing.min_piece_qty !== undefined ? existing.min_piece_qty : (existing.minPieceQty !== undefined ? existing.minPieceQty : '1')
+      const minDozen = existing.min_dozen_qty !== undefined ? existing.min_dozen_qty : (existing.minDozenQty !== undefined ? existing.minDozenQty : '1')
+
       setForm({
         name: existing.name || '',
-        cat: existing.cat || FALLBACK_CATEGORIES[0],
+        supplier_id: existing.supplier_id || existing.supplier?.id || '',
+        cat: existing.cat || existing.category || FALLBACK_CATEGORIES[0],
         description: existing.description || '',
-        priceMin: existing.priceMin || '',
-        priceMax: existing.priceMax || '',
+        sale_type: saleType,
+        price_piece: pricePiece,
+        price_dozen: priceDozen,
+        min_piece_qty: minPiece,
+        min_dozen_qty: minDozen,
+        priceMin: existing.priceMin || existing.price_min || pricePiece || '',
+        priceMax: existing.priceMax || existing.price_max || pricePiece || '',
         icon: existing.icon || 'jacket',
         coverImage: existing.cover_image || existing.coverImage || existing.image_url || '',
         colors: existing.colors?.length
@@ -102,6 +146,13 @@ export default function ProductForm() {
       }
     }
   }, [isEdit, existing])
+
+  // If creating new product and suppliers loaded, set default supplier if not selected
+  useEffect(() => {
+    if (!isEdit && suppliers.length > 0 && !form.supplier_id) {
+      setForm((f) => ({ ...f, supplier_id: suppliers[0].id }))
+    }
+  }, [isEdit, suppliers, form.supplier_id])
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -149,6 +200,35 @@ export default function ProductForm() {
     api.updateSettings({ custom_categories: JSON.stringify(updated) }).catch(() => {})
   }
 
+  // Quick Add Supplier
+  async function handleQuickAddSupplier(e) {
+    e.preventDefault()
+    setQuickError('')
+    if (!quickForm.supplier_code.trim() || !quickForm.name.trim()) {
+      setQuickError('يرجى كتابة كود المورد واسمه')
+      return
+    }
+
+    setQuickSaving(true)
+    try {
+      const created = await api.createSupplier({
+        supplier_code: quickForm.supplier_code.trim().toUpperCase(),
+        name: quickForm.name.trim(),
+        phone: quickForm.phone.trim(),
+        notes: quickForm.notes.trim(),
+        is_active: true
+      })
+      await loadSuppliers()
+      update('supplier_id', created.id)
+      setQuickModal(false)
+      setQuickForm({ supplier_code: '', name: '', phone: '', notes: '' })
+    } catch (err) {
+      setQuickError(err.message || 'فشل إضافة المورد')
+    } finally {
+      setQuickSaving(false)
+    }
+  }
+
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -179,8 +259,23 @@ export default function ProductForm() {
     e.preventDefault()
     setError('')
 
-    if (!form.name.trim() || !form.priceMin || !form.priceMax) {
-      setError('فضلاً عبّي الاسم والسعر على الأقل')
+    if (!form.name.trim()) {
+      setError('فضلاً أدخل اسم المنتج')
+      return
+    }
+
+    if (!form.supplier_id) {
+      setError('يرجى اختيار المورد المسؤول عن هذا المنتج')
+      return
+    }
+
+    if (form.sale_type !== 'dozen' && (!form.price_piece || Number(form.price_piece) <= 0)) {
+      setError('يرجى تحديد سعر القطعة بشكل صحيح')
+      return
+    }
+
+    if (form.sale_type !== 'piece' && (!form.price_dozen || Number(form.price_dozen) <= 0)) {
+      setError('يرجى تحديد سعر الدرزن بشكل صحيح')
       return
     }
 
@@ -195,12 +290,21 @@ export default function ProductForm() {
       return
     }
 
+    const calculatedPricePiece = form.price_piece ? Number(form.price_piece) : Math.round(Number(form.price_dozen) / 12)
+    const calculatedPriceDozen = form.price_dozen ? Number(form.price_dozen) : (calculatedPricePiece * 12)
+
     const payload = {
       name: form.name.trim(),
+      supplier_id: form.supplier_id,
       category: form.cat,
       description: form.description.trim(),
-      price_min: Number(form.priceMin),
-      price_max: Number(form.priceMax),
+      sale_type: form.sale_type,
+      price_piece: calculatedPricePiece,
+      price_dozen: calculatedPriceDozen,
+      min_piece_qty: Math.max(1, Number(form.min_piece_qty) || 1),
+      min_dozen_qty: Math.max(1, Number(form.min_dozen_qty) || 1),
+      price_min: Number(form.priceMin || calculatedPricePiece),
+      price_max: Number(form.priceMax || calculatedPricePiece),
       icon: form.icon,
       cover_image: form.coverImage,
       colors: validColors.map((c) => ({
@@ -241,12 +345,14 @@ export default function ProductForm() {
     )
   }
 
+  const currentProdNumber = existing?.product_number ? String(existing.product_number).padStart(6, '0') : '00000X'
+
   return (
     <>
       <div className="admin-page-head">
         <div>
           <h1 className="display">{isEdit ? 'تعديل منتج' : 'إضافة منتج جديد'}</h1>
-          <p>{isEdit ? `معرّف المنتج: ${id}` : 'سيُولّد كود المنتج تلقائياً بعد الحفظ'}</p>
+          <p>{isEdit ? `رقم المنتج: #${currentProdNumber}` : 'سيُولّد كود المنتج ورقم الـ SKU تلقائياً بعد الحفظ'}</p>
         </div>
         <Link className="btn btn-ghost" to="/admin/products">إلغاء والعودة</Link>
       </div>
@@ -259,8 +365,42 @@ export default function ProductForm() {
             <h3>معلومات المنتج الأساسية</h3>
 
             <div className="pf-field">
-              <label>اسم المنتج</label>
-              <input type="text" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="مثال: كنزة شتوية صوف" />
+              <label>اسم المنتج *</label>
+              <input type="text" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="مثال: كنزة شتوية صوف" required />
+            </div>
+
+            {/* Supplier Selection Field */}
+            <div className="pf-field">
+              <label>المورد *</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <select
+                  value={form.supplier_id}
+                  onChange={(e) => update('supplier_id', e.target.value)}
+                  style={{ flex: 1 }}
+                  required
+                >
+                  <option value="" disabled>-- اختر المورد المسؤول --</option>
+                  {suppliers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.supplier_code})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setQuickModal(true)}
+                  style={{ whiteSpace: 'nowrap', fontSize: 12 }}
+                  title="إضافة مورد سريع دون مغادرة الصفحة"
+                >
+                  + مورد جديد
+                </button>
+              </div>
+              {suppliers.length === 0 && !loadingSuppliers && (
+                <span style={{ fontSize: 11.5, color: 'var(--clay)', marginTop: 4, display: 'block' }}>
+                  لا يوجد موردين فعّالين حالياً، انقر "+ مورد جديد" لإضافة مورد.
+                </span>
+              )}
             </div>
 
             <div className="pf-row">
@@ -282,15 +422,131 @@ export default function ProductForm() {
               </div>
             </div>
 
-            <div className="pf-row">
-              <div className="pf-field">
-                <label>أقل سعر (د.ع)</label>
-                <input type="number" value={form.priceMin} onChange={(e) => update('priceMin', e.target.value)} placeholder="25000" />
+            {/* Sale Type, Pricing & MOQ Section */}
+            <div style={{ background: 'var(--parchment)', borderRadius: 12, padding: 16, border: '1.5px solid var(--line)', marginBottom: 18, marginTop: 10 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 10, color: 'var(--ink-2)' }}>
+                طريقة البيع والتسعير والحد الأدنى للطلب (MOQ)
+              </label>
+
+              <div className="sale-type-grid">
+                <button
+                  type="button"
+                  className={`sale-type-btn${form.sale_type === 'both' ? ' active' : ''}`}
+                  onClick={() => update('sale_type', 'both')}
+                >
+                  <span className="st-icon">📦👕</span>
+                  <span className="st-title">درزن وقطعة (كلاهما)</span>
+                  <span className="st-desc">متاح للزبون الشراء بالمفرد أو بالجملة</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`sale-type-btn${form.sale_type === 'dozen' ? ' active' : ''}`}
+                  onClick={() => update('sale_type', 'dozen')}
+                >
+                  <span className="st-icon">📦</span>
+                  <span className="st-title">بالدرزن فقط (12 قطعة)</span>
+                  <span className="st-desc">يباع بالدرزن فقط ومضاعفاته</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`sale-type-btn${form.sale_type === 'piece' ? ' active' : ''}`}
+                  onClick={() => update('sale_type', 'piece')}
+                >
+                  <span className="st-icon">👕</span>
+                  <span className="st-title">بالقطعة فقط (مفرد)</span>
+                  <span className="st-desc">يباع بالمفرد فقط مع تحديد أقل كمية</span>
+                </button>
               </div>
-              <div className="pf-field">
-                <label>أعلى سعر (د.ع)</label>
-                <input type="number" value={form.priceMax} onChange={(e) => update('priceMax', e.target.value)} placeholder="30000" />
-              </div>
+
+              {/* Price & MOQ Inputs for Piece */}
+              {(form.sale_type === 'both' || form.sale_type === 'piece') && (
+                <div className="pf-row" style={{ marginTop: 12 }}>
+                  <div className="pf-field">
+                    <label>سعر القطعة المفردة (د.ع) *</label>
+                    <input
+                      type="number"
+                      value={form.price_piece}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        update('price_piece', val)
+                        if (!form.priceMin) update('priceMin', val)
+                        if (!form.priceMax) update('priceMax', val)
+                        if (!form.price_dozen && val) update('price_dozen', Number(val) * 12)
+                      }}
+                      placeholder="مثال: 8000"
+                      required={form.sale_type !== 'dozen'}
+                    />
+                  </div>
+                  <div className="pf-field">
+                    <label>أقل كمية لطلب القطع (MOQ) *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.min_piece_qty}
+                      onChange={(e) => update('min_piece_qty', e.target.value)}
+                      placeholder="1"
+                      required={form.sale_type !== 'dozen'}
+                    />
+                    <span style={{ fontSize: 11, color: 'var(--text-dim)', display: 'block', marginTop: 4 }}>أقل عدد قطع يمكن للزبون إضافتها</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Price & MOQ Inputs for Dozen */}
+              {(form.sale_type === 'both' || form.sale_type === 'dozen') && (
+                <div className="pf-row" style={{ marginTop: 12 }}>
+                  <div className="pf-field">
+                    <label>سعر الدرزن الكامل (12 قطعة) (د.ع) *</label>
+                    <input
+                      type="number"
+                      value={form.price_dozen}
+                      onChange={(e) => update('price_dozen', e.target.value)}
+                      placeholder="مثال: 80000"
+                      required={form.sale_type !== 'piece'}
+                    />
+                    <span style={{ fontSize: 11, color: 'var(--text-dim)', display: 'block', marginTop: 4 }}>تحدده بحرية بتخفيض أو بدون تخفيض</span>
+                  </div>
+                  <div className="pf-field">
+                    <label>أقل كمية لطلب الدرازن (MOQ) *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.min_dozen_qty}
+                      onChange={(e) => update('min_dozen_qty', e.target.value)}
+                      placeholder="1"
+                      required={form.sale_type !== 'piece'}
+                    />
+                    <span style={{ fontSize: 11, color: 'var(--text-dim)', display: 'block', marginTop: 4 }}>أقل عدد درازن يمكن للزبون طلبها</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Live Price & Discount Insight Preview */}
+              {form.sale_type === 'both' && form.price_piece && form.price_dozen && (
+                <div className="price-preview-box">
+                  {(() => {
+                    const singleP = Number(form.price_piece) || 0
+                    const dozenP = Number(form.price_dozen) || 0
+                    const pieces12Cost = singleP * 12
+                    const diff = pieces12Cost - dozenP
+                    if (diff > 0 && pieces12Cost > 0) {
+                      const pct = Math.round((diff / pieces12Cost) * 100)
+                      return (
+                        <>
+                          <span className="badge-saving">توفير {pct}% ({diff.toLocaleString('ar')} د.ع)</span>
+                          سعر 12 قطعة مفرد: {pieces12Cost.toLocaleString('ar')} د.ع ⬅️ سعر الدرزن: {dozenP.toLocaleString('ar')} د.ع (تشجيع لجملة الدرزن)
+                        </>
+                      )
+                    } else if (diff === 0) {
+                      return <span>سعر الدرزن مطابق لسعر 12 قطعة مفردة ({dozenP.toLocaleString('ar')} د.ع)</span>
+                    } else {
+                      return <span>سعر الدرزن: {dozenP.toLocaleString('ar')} د.ع · سعر القطعة: {singleP.toLocaleString('ar')} د.ع</span>
+                    }
+                  })()}
+                </div>
+              )}
             </div>
 
             <div className="pf-field">
@@ -381,7 +637,7 @@ export default function ProductForm() {
               </div>
 
               <div className="sku-note" style={{ marginTop: 14, fontSize: 12, color: 'var(--text-dim)' }}>
-                يتم توليد رموز SKU تلقائياً لكل تركيبة ({validColorsForStock.length} ألوان × {form.sizes.length} مقاسات = {validColorsForStock.length * form.sizes.length} متغيّر).
+                ℹ️ صيغة الـ SKU التلقائية: <code>DZN-{currentProdNumber}-[COLOR]-[SIZE]</code> ({validColorsForStock.length} ألوان × {form.sizes.length} مقاسات = {validColorsForStock.length * form.sizes.length} متغيّر).
               </div>
             </div>
           </div>
@@ -436,6 +692,113 @@ export default function ProductForm() {
           </button>
         </div>
       </form>
+
+      {/* Quick Add Supplier Modal */}
+      {quickSupplierModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(3px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: 16
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setQuickModal(false)
+          }}
+        >
+          <div
+            className="admin-card"
+            style={{
+              width: '100%',
+              maxWidth: 440,
+              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+              margin: 0
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h3 style={{ margin: 0, fontSize: 17 }}>+ إضافة مورد جديد فوري</h3>
+              <button
+                type="button"
+                onClick={() => setQuickModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-dim)' }}
+              >
+                ×
+              </button>
+            </div>
+
+            {quickError && (
+              <div style={{ background: '#fff0f0', color: '#c33', padding: '8px 12px', borderRadius: 8, fontSize: 12.5, marginBottom: 12 }}>
+                {quickError}
+              </div>
+            )}
+
+            <form onSubmit={handleQuickAddSupplier}>
+              <div className="pf-field">
+                <label>كود المورد *</label>
+                <input
+                  type="text"
+                  placeholder="SUP-C"
+                  value={quickForm.supplier_code}
+                  onChange={(e) => setQuickForm({ ...quickForm, supplier_code: e.target.value.toUpperCase() })}
+                  required
+                />
+              </div>
+
+              <div className="pf-field">
+                <label>اسم المورد *</label>
+                <input
+                  type="text"
+                  placeholder="مخزن بغداد للأزياء"
+                  value={quickForm.name}
+                  onChange={(e) => setQuickForm({ ...quickForm, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="pf-field">
+                <label>رقم الهاتف</label>
+                <input
+                  type="tel"
+                  placeholder="07XXXXXXXXX"
+                  value={quickForm.phone}
+                  onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })}
+                  dir="ltr"
+                  style={{ textAlign: 'right' }}
+                />
+              </div>
+
+              <div className="pf-field">
+                <label>ملاحظات</label>
+                <textarea
+                  placeholder="ملاحظات مختصرة..."
+                  value={quickForm.notes}
+                  onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setQuickModal(false)}
+                  disabled={quickSaving}
+                >
+                  إلغاء
+                </button>
+                <button type="submit" className="btn btn-brass" disabled={quickSaving}>
+                  {quickSaving ? 'جاري الحفظ...' : 'إضافة واختيار'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   )
 }

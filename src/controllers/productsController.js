@@ -15,6 +15,9 @@ export async function listProducts(req, res, next) {
         .from('products')
         .select(`
           *,
+          suppliers (
+            id, name, supplier_code, phone
+          ),
           product_colors (
             id, code, name, hex, g1, g2, sort_order
           ),
@@ -66,6 +69,9 @@ export async function getProduct(req, res, next) {
         .from('products')
         .select(`
           *,
+          suppliers (
+            id, name, supplier_code, phone
+          ),
           product_colors (
             id, code, name, hex, g1, g2, sort_order
           ),
@@ -121,7 +127,7 @@ export async function listCategories(_req, res, next) {
 /**
  * Transform a DB product row into the shape the frontend expects.
  */
-function transformProduct(row) {
+export function transformProduct(row) {
   const colors = (row.product_colors || [])
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
     .map((c) => ({
@@ -156,11 +162,31 @@ function transformProduct(row) {
 
   return {
     id: row.id,
+    product_number: row.product_number,
+    supplier_id: row.supplier_id,
+    supplier: row.suppliers ? {
+      id: row.suppliers.id,
+      name: row.suppliers.name,
+      supplier_code: row.suppliers.supplier_code,
+      phone: row.suppliers.phone
+    } : null,
     name: row.name,
     cat: row.category,
     description: row.description,
     priceMin: row.price_min,
     priceMax: row.price_max,
+    price_min: row.price_min,
+    price_max: row.price_max,
+    sale_type: row.sale_type || 'both',
+    saleType: row.sale_type || 'both',
+    price_piece: row.price_piece !== undefined ? row.price_piece : row.price_min,
+    pricePiece: row.price_piece !== undefined ? row.price_piece : row.price_min,
+    price_dozen: row.price_dozen !== undefined ? row.price_dozen : ((row.price_piece || row.price_min || 0) * 12),
+    priceDozen: row.price_dozen !== undefined ? row.price_dozen : ((row.price_piece || row.price_min || 0) * 12),
+    min_piece_qty: row.min_piece_qty !== undefined ? row.min_piece_qty : 1,
+    minPieceQty: row.min_piece_qty !== undefined ? row.min_piece_qty : 1,
+    min_dozen_qty: row.min_dozen_qty !== undefined ? row.min_dozen_qty : 1,
+    minDozenQty: row.min_dozen_qty !== undefined ? row.min_dozen_qty : 1,
     icon: row.icon,
     colors,
     skuMatrix,

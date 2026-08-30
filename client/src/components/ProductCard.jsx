@@ -19,13 +19,20 @@ export default function ProductCard({ product }) {
   const g1 = firstColor.g1 ?? '#E7DEC8'
   const g2 = firstColor.g2 ?? '#D8CBA9'
 
-  const minPrice = typeof product.priceMin === 'number' ? product.priceMin : (typeof product.price_min === 'number' ? product.price_min : 0)
-  const maxPrice = typeof product.priceMax === 'number' ? product.priceMax : (typeof product.price_max === 'number' ? product.price_max : minPrice)
+  const saleType = product.sale_type || product.saleType || 'both'
+  const pricePiece = typeof product.price_piece === 'number' ? product.price_piece : (typeof product.pricePiece === 'number' ? product.pricePiece : (typeof product.price_min === 'number' ? product.price_min : (typeof product.priceMin === 'number' ? product.priceMin : 0)))
+  const priceDozen = typeof product.price_dozen === 'number' ? product.price_dozen : (typeof product.priceDozen === 'number' ? product.priceDozen : (pricePiece * 12))
+  const minPiece = Number(product.min_piece_qty || product.minPieceQty || 1)
+  const minDozen = Number(product.min_dozen_qty || product.minDozenQty || 1)
 
-  const priceLabel =
-    minPrice === maxPrice
-      ? `${minPrice.toLocaleString('ar')} د.ع`
-      : `${minPrice.toLocaleString('ar')} – ${maxPrice.toLocaleString('ar')} د.ع`
+  let priceLabel = ''
+  if (saleType === 'dozen') {
+    priceLabel = `${priceDozen.toLocaleString('ar')} د.ع / درزن`
+  } else if (saleType === 'piece') {
+    priceLabel = `${pricePiece.toLocaleString('ar')} د.ع / قطعة`
+  } else {
+    priceLabel = `${pricePiece.toLocaleString('ar')} د.ع`
+  }
 
   const firstColorId = firstColor.id
   const mainImage =
@@ -50,7 +57,11 @@ export default function ProductCard({ product }) {
                 style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
               />
             )}
-            <div className="cat-tag">{product.cat || product.category || 'عام'}</div>
+            {saleType === 'dozen' && (
+              <div className="pcard-badge-dozen">
+                📦 بالدرزن فقط
+              </div>
+            )}
             <button
               className={`fav${isFav ? ' active' : ''}`}
               onClick={(e) => { e.preventDefault(); toggle(product.id) }}
@@ -72,12 +83,27 @@ export default function ProductCard({ product }) {
             {!mainImage && WatermarkIcon && <WatermarkIcon className="watermark" width={110} height={110} />}
           </div>
           <div className="info">
-            <div className="pname">{product.name}</div>
-            <div className="price">{priceLabel}</div>
-            <div className="colordots">
-              {colors.map((c, idx) => (
-                <span key={c.code || c.id || idx} style={{ background: c.hex || '#888' }} />
-              ))}
+            <div className="pcard-category">{product.cat || product.category || 'ملابس'}</div>
+            <div className="pname" title={product.name}>{product.name}</div>
+            <div className="pcard-price-row">
+              <span className="pcard-price-main">{priceLabel}</span>
+              {saleType === 'both' && priceDozen < pricePiece * 12 && (
+                <span className="pcard-saving-pill">وفر بالدرزن</span>
+              )}
+            </div>
+            <div className="pcard-footer">
+              <div className="pcard-moq">
+                {saleType === 'dozen' && minDozen > 1
+                  ? `أقل طلب: ${minDozen} درزن`
+                  : minPiece > 1
+                  ? `أقل طلب: ${minPiece} قطع`
+                  : ''}
+              </div>
+              <div className="colordots">
+                {colors.map((c, idx) => (
+                  <span key={c.code || c.id || idx} style={{ background: c.hex || '#888' }} />
+                ))}
+              </div>
             </div>
           </div>
         </Link>

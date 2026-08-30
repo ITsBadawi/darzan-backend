@@ -16,9 +16,12 @@ function seededRandom(seed) {
 // version fabricates realistic-looking stock/price numbers so the color
 // & size selector on the product page has something real to filter on.
 export function buildSkuMatrix(product) {
-  const rand = seededRandom(product.id)
+  const rand = seededRandom(String(product.id))
   const matrix = {}
-  product.colors.forEach((color) => {
+  const prodNum = product.product_number || product.productNumber || 1
+  const prodCodeStr = typeof prodNum === 'number' ? String(prodNum).padStart(6, '0') : String(product.id).slice(-6).toUpperCase()
+
+  ;(product.colors || []).forEach((color) => {
     SIZES.forEach((size, i) => {
       const key = `${color.code}-${size}`
       const inStock = rand() > 0.22
@@ -27,7 +30,7 @@ export function buildSkuMatrix(product) {
       matrix[key] = {
         price: product.priceMin + priceBump,
         stock: inStock ? Math.ceil(rand() * 15) : 0,
-        sku: `DZN-${product.id.toUpperCase()}-${color.code}-${size}`
+        sku: `DZN-${prodCodeStr}-${color.code}-${size}`
       }
     })
   })

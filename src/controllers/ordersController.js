@@ -48,7 +48,7 @@ export async function createOrder(req, res, next) {
         if (!orderError && order) {
           const orderItems = items.map((item) => ({
             order_id: order.id,
-            product_id: item.product_id || null,
+            product_id: item.product_id || item.productId || null,
             sku_id: item.sku_id || null,
             product_name: item.product_name || item.name,
             color_name: item.color_name || item.colorName,
@@ -58,7 +58,9 @@ export async function createOrder(req, res, next) {
             size: item.size,
             sku_code: item.sku_code || item.sku,
             qty: item.qty,
-            unit_price: item.unit_price || item.price
+            unit_price: item.unit_price || item.price,
+            unit_type: item.unit_type || item.unitType || 'piece',
+            unit_name: item.unit_name || item.unitName || (item.unit_type === 'dozen' || item.unitType === 'dozen' ? 'درزن' : 'قطعة')
           }))
 
           await supabaseAdmin.from('order_items').insert(orderItems)
@@ -78,7 +80,9 @@ export async function createOrder(req, res, next) {
               size: oi.size,
               sku: oi.sku_code,
               qty: oi.qty,
-              price: oi.unit_price
+              price: oi.unit_price,
+              unitType: oi.unit_type,
+              unitName: oi.unit_name
             }))
           }).catch(() => { /* logged inside */ })
 
@@ -108,7 +112,7 @@ export async function createOrder(req, res, next) {
       createdAt: new Date().toISOString(),
       items: items.map((item, idx) => ({
         lineId: `line-${newOrderId}-${idx}`,
-        productId: item.product_id || null,
+        productId: item.product_id || item.productId || null,
         name: item.product_name || item.name,
         colorName: item.color_name || item.colorName,
         colorHex: item.color_hex || item.colorHex,
@@ -117,7 +121,9 @@ export async function createOrder(req, res, next) {
         size: item.size,
         sku: item.sku_code || item.sku,
         qty: item.qty,
-        price: item.unit_price || item.price
+        price: item.unit_price || item.price,
+        unitType: item.unit_type || item.unitType || 'piece',
+        unitName: item.unit_name || item.unitName || (item.unit_type === 'dozen' || item.unitType === 'dozen' ? 'درزن' : 'قطعة')
       }))
     }
 
@@ -138,7 +144,9 @@ export async function createOrder(req, res, next) {
         size: li.size,
         sku: li.sku,
         qty: li.qty,
-        price: li.price
+        price: li.price,
+        unitType: li.unitType,
+        unitName: li.unitName
       }))
     }).catch(() => { /* logged inside */ })
 

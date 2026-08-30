@@ -7,6 +7,15 @@ import { SIZES } from '../data/products.js'
 export default function QuickAddModal({ product, isOpen, onClose, onAdded }) {
   if (!product || !isOpen) return null
 
+  const saleType = product.sale_type || product.saleType || 'both'
+  const pricePiece = product.price_piece !== undefined ? product.price_piece : (product.pricePiece !== undefined ? product.pricePiece : (product.priceMin || product.price_min || 0))
+  const priceDozen = product.price_dozen !== undefined ? product.price_dozen : (product.priceDozen !== undefined ? product.priceDozen : (pricePiece * 12))
+  const minPieceQty = Math.max(1, Number(product.min_piece_qty || product.minPieceQty || 1))
+  const minDozenQty = Math.max(1, Number(product.min_dozen_qty || product.minDozenQty || 1))
+
+  const [unit, setUnit] = useState(() => (saleType === 'dozen' ? 'dozen' : 'piece'))
+  const currentMoq = unit === 'dozen' ? minDozenQty : minPieceQty
+
   // SKU Matrix generation
   const matrix = useMemo(() => {
     if (product.skuMatrix && Object.keys(product.skuMatrix).length > 0) {
@@ -20,30 +29,38 @@ export default function QuickAddModal({ product, isOpen, onClose, onAdded }) {
         const spread = Math.max(0, product.priceMax - product.priceMin)
         const priceBump = i >= 4 ? (spread > 0 ? Math.round(spread * 0.4) : 0) : 0
         m[key] = {
-          price: product.priceMin + priceBump,
+          price: (product.priceMin || pricePiece) + priceBump,
           stock: 10,
           sku: `DZN-${product.id}-${color.code}-${size}`
         }
       })
     })
     return m
-  }, [product])
+  }, [product, pricePiece])
 
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.code || null)
   const [selectedSize, setSelectedSize] = useState(null)
-  const [qty, setQty] = useState(1)
+  const [qty, setQty] = useState(currentMoq)
 
   useEffect(() => {
     if (product?.colors?.[0]?.code) {
       setSelectedColor(product.colors[0].code)
     }
     setSelectedSize(null)
-    setQty(1)
-  }, [product])
+    const initialUnit = saleType === 'dozen' ? 'dozen' : 'piece'
+    setUnit(initialUnit)
+    setQty(initialUnit === 'dozen' ? minDozenQty : minPieceQty)
+  }, [product, saleType, minPieceQty, minDozenQty])
+
+  function switchUnit(newUnit) {
+    setUnit(newUnit)
+    const targetMoq = newUnit === 'dozen' ? minDozenQty : minPieceQty
+    setQty(targetMoq)
+  }
 
   const addItem = useCartStore((s) => s.addItem)
 
-  const colorObj = product.colors.find((c) => c.code === selectedColor)
+  const colorObj = product.colors?.find((c) => c.code === selectedColor) || product.colors?.[0]
   const sku = selectedColor && selectedSize ? matrix[`${selectedColor}-${selectedSize}`] : null
 
   function selectColor(code) {
@@ -63,10 +80,13 @@ export default function QuickAddModal({ product, isOpen, onClose, onAdded }) {
   }
 
   const mainImg = product.cover_image || product.coverImage || product.image_url || colorObj?.image_url
+  const currentUnitPrice = unit === 'dozen' ? priceDozen : (sku ? sku.price : pricePiece)
 
   function handleAddToCart() {
     if (!sku) return
-    const lineId = `${product.id}-${selectedColor}-${selectedSize}`
+    const lineId = `${product.id}-${selectedColor}-${selectedSize}-${unit}`
+    const unitName = unit === 'dozen' ? 'درزن' : 'قطعة'
+
     addItem({
       lineId,
       productId: product.id,
@@ -83,22 +103,30 @@ export default function QuickAddModal({ product, isOpen, onClose, onAdded }) {
       g2: colorObj.g2,
       size: selectedSize,
       qty,
-      price: sku.price,
-      unit_price: sku.price,
+      unit_type: unit,
+      unitType: unit,
+      unit_name: unitName,
+      unitName: unitName,
+      min_qty: currentMoq,
+      price: currentUnitPrice,
+      unit_price: currentUnitPrice,
       sku: sku.sku,
       sku_code: sku.sku,
       sku_id: sku.id || null
     })
 
     if (onAdded) {
-      onAdded(`تمت إضافة ${qty} × ${product.name} (${colorObj.name} / ${selectedSize}) إلى السلة`)
+      const unitExtra = unit === 'dozen' ? ` (${qty * 12} قطعة)` : ''
+      onAdded(`تمت إضافة ${qty} ${unitName}${unitExtra} × ${product.name} (${colorObj.name} / ${selectedSize}) إلى السلة`)
     }
     onClose()
   }
 
-  const priceLabel = sku
-    ? `${sku.price.toLocaleString('ar')} د.ع`
-    : `${product.priceMin.toLocaleString('ar')} – ${product.priceMax.toLocaleString('ar')} د.ع`
+  const priceLabel = unit === 'dozen'
+    ? `${priceDozen.toLocaleString('ar')} د.ع / درزن`
+    : (sku
+      ? `${sku.price.toLocaleString('ar')} د.ع / قطعة`
+      : `${(product.priceMin || pricePiece).toLocaleString('ar')} د.ع`)
 
   return (
     <div className="quick-add-backdrop" onClick={onClose}>
@@ -122,7 +150,7 @@ export default function QuickAddModal({ product, isOpen, onClose, onAdded }) {
                   {sku.stock > 5 ? (
                     <span className="stock-in">متوفر في المخزون ✓</span>
                   ) : (
-                    <span className="stock-low">الكمية محدودة — تبقّى {sku.stock} فقط</span>
+                    <span className="stock-low">الكمية محدودة — تبقّى ${sku.stock} فقط</span>
                   )}
                 </div>
               )}
@@ -134,6 +162,28 @@ export default function QuickAddModal({ product, isOpen, onClose, onAdded }) {
         </div>
 
         <div className="quick-add-body">
+          {/* Unit selection if both available */}
+          {saleType === 'both' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
+              <button
+                type="button"
+                className={`unit-switch-btn${unit === 'piece' ? ' active' : ''}`}
+                onClick={() => switchUnit('piece')}
+                style={{ padding: '6px 4px' }}
+              >
+                <span className="btn-title" style={{ fontSize: 12.5 }}>👕 بالقطعة</span>
+              </button>
+              <button
+                type="button"
+                className={`unit-switch-btn${unit === 'dozen' ? ' active' : ''}`}
+                onClick={() => switchUnit('dozen')}
+                style={{ padding: '6px 4px' }}
+              >
+                <span className="btn-title" style={{ fontSize: 12.5 }}>📦 بالدرزن</span>
+              </button>
+            </div>
+          )}
+
           <ColorSizeSelector
             product={product}
             matrix={matrix}
@@ -143,9 +193,22 @@ export default function QuickAddModal({ product, isOpen, onClose, onAdded }) {
             onSelectSize={selectSize}
           />
 
-          <div className="qty-row">
-            <h4>الكمية</h4>
-            <QtyStepper qty={qty} onChange={setQty} max={sku?.stock} />
+          <div className="qty-row" style={{ marginTop: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <h4 style={{ margin: 0, fontSize: 13 }}>الكمية</h4>
+              {currentMoq > 1 && (
+                <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
+                  (أقل طلب: {currentMoq})
+                </span>
+              )}
+            </div>
+            <QtyStepper
+              qty={qty}
+              min={currentMoq}
+              onChange={setQty}
+              max={unit === 'dozen' ? Math.max(1, Math.floor((sku?.stock || 120) / 12)) : sku?.stock}
+              unitLabel={unit === 'dozen' ? 'درزن' : 'قطعة'}
+            />
           </div>
         </div>
 
@@ -153,8 +216,8 @@ export default function QuickAddModal({ product, isOpen, onClose, onAdded }) {
           <button className="btn-cart" disabled={!sku} onClick={handleAddToCart}>
             {sku ? (
               <>
-                <span>إضافة إلى السلة 🛍️</span>
-                <span className="btn-cart-price">({(sku.price * qty).toLocaleString('ar')} د.ع)</span>
+                <span>إضافة {qty} {unit === 'dozen' ? 'درزن' : 'قطعة'} للسلة 🛍️</span>
+                <span className="btn-cart-price">({(currentUnitPrice * qty).toLocaleString('ar')} د.ع)</span>
               </>
             ) : (
               'حدد المقاس واللون للاستمرار'

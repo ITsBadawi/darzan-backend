@@ -10,16 +10,21 @@ const STATUS_CLASS = {
 }
 
 function generateInvoiceHTML(order) {
-  const itemsRows = order.items.map((it) =>
-    `<tr>
-      <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px">${it.name}</td>
+  const itemsRows = order.items.map((it) => {
+    const unitName = it.unitName || (it.unitType === 'dozen' ? 'درزن' : 'قطعة')
+    const unitExtra = it.unitType === 'dozen' ? ` (${it.qty * 12} قطعة)` : ''
+    return `<tr>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px">
+        <strong>${it.name}</strong>
+        ${(it.sku || it.sku_code) ? `<br><span style="font-size:11px;color:#777;font-family:monospace">SKU: ${it.sku || it.sku_code}</span>` : ''}
+      </td>
       <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;text-align:center">${it.colorName || '-'}</td>
       <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;text-align:center">${it.size || '-'}</td>
-      <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;text-align:center">${it.qty}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;text-align:center"><strong>${it.qty}</strong> ${unitName}${unitExtra}</td>
       <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;text-align:left">${(it.price || 0).toLocaleString('ar')} د.ع</td>
       <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;text-align:left;font-weight:600">${((it.price || 0) * (it.qty || 0)).toLocaleString('ar')} د.ع</td>
     </tr>`
-  ).join('')
+  }).join('')
 
   return `
   <!DOCTYPE html>
@@ -197,11 +202,20 @@ export default function Orders() {
                             <strong>الهاتف:</strong> {o.customerPhone}<br />
                             {o.notes && <><strong>ملاحظات:</strong> {o.notes}<br /></>}
                             <div style={{ marginTop: 10 }}>
-                              {o.items.map((it) => (
-                                <div key={it.lineId} style={{ fontSize: 12.5, marginBottom: 4 }}>
-                                  {it.name} — {it.colorName} / {it.size} × {it.qty} = {(it.price * it.qty).toLocaleString('ar')} د.ع
-                                </div>
-                              ))}
+                              {o.items.map((it) => {
+                                const unitName = it.unitName || (it.unitType === 'dozen' ? 'درزن' : 'قطعة')
+                                const unitExtra = it.unitType === 'dozen' ? ` (${it.qty * 12} قطعة)` : ''
+                                return (
+                                  <div key={it.lineId || it.id} style={{ fontSize: 12.5, marginBottom: 6 }}>
+                                    <strong>{it.name}</strong> — {it.colorName} / {it.size} × <strong>{it.qty} {unitName}{unitExtra}</strong> = {((it.price || it.unit_price || 0) * it.qty).toLocaleString('ar')} د.ع
+                                    {(it.sku || it.sku_code) && (
+                                      <span style={{ marginRight: 8, fontSize: 11, fontFamily: 'monospace', color: 'var(--text-dim)', background: '#eee', padding: '1px 5px', borderRadius: 4 }}>
+                                        {it.sku || it.sku_code}
+                                      </span>
+                                    )}
+                                  </div>
+                                )
+                              })}
                             </div>
                             <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                               <label style={{ fontSize: 12.5, fontWeight: 600 }}>تغيير الحالة:</label>

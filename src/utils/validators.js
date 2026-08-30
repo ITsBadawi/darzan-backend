@@ -59,6 +59,27 @@ export function validateOrder(body) {
 }
 
 /**
+ * Validate supplier input (for creating/updating suppliers).
+ */
+export function validateSupplier(body) {
+  const errors = []
+
+  if (!body.supplier_code || body.supplier_code.trim().length < 2) {
+    errors.push('كود المورد مطلوب (حرفين على الأقل مثل SUP-A)')
+  }
+
+  if (!body.name || body.name.trim().length < 2) {
+    errors.push('اسم المورد مطلوب')
+  }
+
+  if (body.phone && body.phone.trim() && !/^0?7[0-9]{9}$/.test(body.phone.trim().replace(/[- ]/g, ''))) {
+    errors.push('رقم هاتف المورد غير صالح')
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+/**
  * Validate product input from the admin panel (supports both camelCase and snake_case).
  */
 export function validateProduct(body) {
@@ -73,18 +94,39 @@ export function validateProduct(body) {
     errors.push('التصنيف مطلوب')
   }
 
-  const pMin = body.price_min !== undefined ? body.price_min : body.priceMin
-  if (pMin === undefined || pMin < 0) {
+  const calculatedPiece = body.price_piece !== undefined
+    ? Number(body.price_piece)
+    : (body.price_dozen !== undefined ? Math.round(Number(body.price_dozen) / 12) : undefined)
+
+  const pMin = body.price_min !== undefined ? Number(body.price_min) : (body.priceMin !== undefined ? Number(body.priceMin) : calculatedPiece)
+  if (pMin === undefined || isNaN(pMin) || pMin < 0) {
     errors.push('أقل سعر مطلوب')
   }
 
-  const pMax = body.price_max !== undefined ? body.price_max : body.priceMax
-  if (pMax === undefined || pMax < 0) {
+  const pMax = body.price_max !== undefined ? Number(body.price_max) : (body.priceMax !== undefined ? Number(body.priceMax) : pMin)
+  if (pMax === undefined || isNaN(pMax) || pMax < 0) {
     errors.push('أعلى سعر مطلوب')
+  }
+
+  if (body.sale_type && !['both', 'dozen', 'piece'].includes(body.sale_type)) {
+    errors.push('نوع البيع غير صالح (يجب أن يكون بالدرزن والقطعة، أو بالدرزن فقط، أو بالقطعة فقط)')
+  }
+
+  if (body.min_piece_qty !== undefined && Number(body.min_piece_qty) < 1) {
+    errors.push('الحد الأدنى لطلب القطع يجب أن يكون 1 على الأقل')
+  }
+
+  if (body.min_dozen_qty !== undefined && Number(body.min_dozen_qty) < 1) {
+    errors.push('الحد الأدنى لطلب الدرازن يجب أن يكون 1 على الأقل')
   }
 
   if (!Array.isArray(body.colors) || body.colors.length === 0) {
     errors.push('لون واحد على الأقل مطلوب')
+  }
+
+  const supplierId = body.supplier_id || body.supplierId
+  if (!supplierId) {
+    errors.push('تحديد المورد مطلوب')
   }
 
   return { valid: errors.length === 0, errors }

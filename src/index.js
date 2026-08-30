@@ -9,6 +9,7 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 
 import productsRouter from './routes/products.js'
+import suppliersRouter from './routes/suppliers.js'
 import ordersRouter from './routes/orders.js'
 import authRouter from './routes/auth.js'
 import adminRouter from './routes/admin.js'
@@ -77,6 +78,7 @@ app.use('/api/', limiter)
 // --------------- API Routes ---------------
 
 app.use('/api/auth', authRouter)
+app.use('/api/suppliers', suppliersRouter)
 app.use('/api/products', productsRouter)
 app.use('/api/orders', ordersRouter)
 app.use('/api/admin', adminRouter)

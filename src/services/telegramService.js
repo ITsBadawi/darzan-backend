@@ -22,8 +22,51 @@ const CHAT_ID = process.env.TELEGRAM_CHAT_ID
  * @param {string} order.address
  * @param {string} [order.notes]
  * @param {number} order.total
- * @param {Array}  order.items — [{ name, colorName, size, sku, qty, price }]
+ * @param {Array}  order.items — [{ name, colorName, size, sku, qty, price, supplierName, supplierCode }]
  */
+export function formatOrderMessage(order) {
+  const itemsText = order.items
+    .map((item, i) => {
+      const name = item.name || item.product_name || 'منتج'
+      const color = item.colorName || item.color_name || ''
+      const size = item.size || ''
+      const sku = item.sku || item.sku_code || ''
+      const qty = item.qty || 1
+      const lineTotal = ((item.price || item.unit_price || 0) * qty).toLocaleString('ar-IQ')
+
+      let line = `${i + 1}. <b>${name}</b>`
+      if (color) line += ` — ${color}`
+      if (size) line += ` — ${size}`
+      if (sku) line += ` <code>(${sku})</code>`
+      const isDozen = item.unit_type === 'dozen' || item.unitType === 'dozen'
+      const unitName = item.unit_name || item.unitName || (isDozen ? 'درزن' : 'قطعة')
+      const unitSuffix = isDozen ? ` (${qty * 12} قطعة)` : ''
+      line += `\n   الكمية: ${qty} ${unitName}${unitSuffix} · السعر: ${lineTotal} د.ع`
+      return line
+    })
+    .join('\n\n')
+
+  const totalFormatted = (order.total || 0).toLocaleString('ar-IQ')
+
+  let message = `📦 <b>طلب جديد #${order.orderNumber || order.order_number}</b>\n`
+  message += `━━━━━━━━━━━━━━━━━━━\n\n`
+  message += `👤 <b>الاسم:</b> ${order.customerName || order.customer_name}\n`
+  message += `📱 <b>الرقم:</b> ${order.customerPhone || order.customer_phone}\n`
+  message += `🏠 <b>المحافظة:</b> ${order.province}\n`
+  message += `📍 <b>العنوان:</b> ${order.address}\n`
+  if (order.notes) {
+    message += `📝 <b>ملاحظات:</b> ${order.notes}\n`
+  }
+  message += `\n━━━━━━━━━━━━━━━━━━━\n`
+  message += `🛍️ <b>المنتجات:</b>\n\n`
+  message += itemsText
+  message += `\n\n━━━━━━━━━━━━━━━━━━━\n`
+  message += `💵 <b>الإجمالي: ${totalFormatted} د.ع</b>\n`
+  message += `🕐 ${new Date().toLocaleString('ar-IQ', { timeZone: 'Asia/Baghdad' })}`
+
+  return message
+}
+
 export async function sendOrderNotification(order) {
   if (!BOT_TOKEN || !CHAT_ID) {
     console.warn('⚠️ [Telegram] BOT_TOKEN or CHAT_ID not configured — skipping notification.')
@@ -31,42 +74,7 @@ export async function sendOrderNotification(order) {
   }
 
   try {
-    const itemsText = order.items
-      .map((item, i) => {
-        const name = item.name || item.product_name || 'منتج'
-        const color = item.colorName || item.color_name || ''
-        const size = item.size || ''
-        const sku = item.sku || item.sku_code || ''
-        const qty = item.qty || 1
-        const lineTotal = ((item.price || item.unit_price || 0) * qty).toLocaleString('ar-IQ')
-
-        let line = `${i + 1}. <b>${name}</b>`
-        if (color) line += ` — ${color}`
-        if (size) line += ` — ${size}`
-        if (sku) line += ` <code>(${sku})</code>`
-        line += `\n   الكمية: ${qty} · السعر: ${lineTotal} د.ع`
-        return line
-      })
-      .join('\n\n')
-
-    const totalFormatted = (order.total || 0).toLocaleString('ar-IQ')
-
-    let message = `📦 <b>طلب جديد #${order.orderNumber}</b>\n`
-    message += `━━━━━━━━━━━━━━━━━━━\n\n`
-    message += `👤 <b>الاسم:</b> ${order.customerName}\n`
-    message += `📱 <b>الرقم:</b> ${order.customerPhone}\n`
-    message += `🏠 <b>المحافظة:</b> ${order.province}\n`
-    message += `📍 <b>العنوان:</b> ${order.address}\n`
-    if (order.notes) {
-      message += `📝 <b>ملاحظات:</b> ${order.notes}\n`
-    }
-    message += `\n━━━━━━━━━━━━━━━━━━━\n`
-    message += `🛍️ <b>المنتجات:</b>\n\n`
-    message += itemsText
-    message += `\n\n━━━━━━━━━━━━━━━━━━━\n`
-    message += `💵 <b>الإجمالي: ${totalFormatted} د.ع</b>\n`
-    message += `🕐 ${new Date().toLocaleString('ar-IQ', { timeZone: 'Asia/Baghdad' })}`
-
+    const message = formatOrderMessage(order)
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`
 
     const response = await fetch(url, {
