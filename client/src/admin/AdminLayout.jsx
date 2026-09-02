@@ -31,22 +31,42 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-shell" dir="rtl">
-      <div className="admin-topbar">
-        <button onClick={() => setOpen(true)} aria-label="القائمة"><MenuIcon width={22} height={22} /></button>
-        <span className="name display">درازن — الإدارة</span>
-      </div>
+      <header className="admin-topbar">
+        <div className="admin-topbar-start">
+          <button className="admin-menu-btn" onClick={() => setOpen(true)} aria-label="فتح القائمة">
+            <MenuIcon width={22} height={22} />
+          </button>
+          <span className="name display">درازن — الإدارة</span>
+        </div>
+        <a href="/" target="_blank" rel="noopener noreferrer" className="admin-topbar-link">
+          المتجر ↗
+        </a>
+      </header>
 
       {open && <div className="admin-overlay" onClick={() => setOpen(false)} />}
 
       <aside className={`admin-sidebar${open ? ' open' : ''}`}>
         <div className="brand">
-          <span className="name display">درازن</span>
-          <span className="label">لوحة التحكم</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div>
+              <span className="name display">درازن</span>
+              <span className="label">لوحة التحكم الإدارية</span>
+            </div>
+            <button className="admin-sidebar-close" onClick={() => setOpen(false)} aria-label="إغلاق القائمة">
+              ✕
+            </button>
+          </div>
         </div>
 
         <nav className="admin-nav">
           {visibleNav.map(({ to, label, end, icon: Icon }) => (
-            <NavLink key={to} to={to} end={end} onClick={() => setOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => (isActive ? 'active' : '')}
+            >
               <Icon />
               <span>{label}</span>
             </NavLink>
@@ -54,15 +74,17 @@ export default function AdminLayout() {
         </nav>
 
         <div className="admin-user">
-          <div className="who">{user.name}</div>
-          <div className="role">{user.role === 'admin' ? 'صلاحية كاملة' : 'إدارة المنتجات والموردين'}</div>
-          <button onClick={logout}>تسجيل خروج</button>
+          <div className="user-info">
+            <div className="who">{user.name}</div>
+            <div className="role">{user.role === 'admin' ? 'صلاحية كاملة (مدير)' : 'إدارة المنتجات والموردين'}</div>
+          </div>
+          <button className="admin-logout-btn" onClick={logout}>تسجيل خروج</button>
         </div>
       </aside>
 
-      <div className="admin-content">
+      <main className="admin-content">
         <Outlet />
-      </div>
+      </main>
     </div>
   )
 }

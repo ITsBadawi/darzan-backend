@@ -356,7 +356,9 @@ export default function Categories() {
                       padding: '12px 16px',
                       background: 'var(--surface)',
                       border: '1px solid var(--line)',
-                      borderRadius: 10
+                      borderRadius: 10,
+                      flexWrap: 'wrap',
+                      gap: 10
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

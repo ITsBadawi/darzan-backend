@@ -204,21 +204,22 @@ export default function Settings() {
                   background: promoBg || '#8B2E1F',
                   color: '#fff',
                   borderRadius: 14,
-                  padding: '20px 24px',
+                  padding: '16px 20px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: 16,
+                  gap: 14,
+                  flexWrap: 'wrap',
                   boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
                   transition: 'all 0.2s ease'
                 }}
               >
-                <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 800, fontFamily: 'inherit' }}>
+                <div style={{ flex: '1 1 200px' }}>
+                  <h4 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, fontFamily: 'inherit' }}>
                     {promoTitle || 'نهاية الموسم'}
                   </h4>
                   {promoText && (
-                    <p style={{ margin: 0, fontSize: 13, opacity: 0.9, lineHeight: 1.5 }}>
+                    <p style={{ margin: 0, fontSize: 12.5, opacity: 0.9, lineHeight: 1.5 }}>
                       {promoText}
                     </p>
                   )}
@@ -226,11 +227,11 @@ export default function Settings() {
                 {promoDiscount && (
                   <div
                     style={{
-                      fontSize: 26,
+                      fontSize: 22,
                       fontWeight: 900,
                       letterSpacing: '-0.5px',
                       background: 'rgba(255,255,255,0.15)',
-                      padding: '8px 16px',
+                      padding: '6px 14px',
                       borderRadius: 10,
                       backdropFilter: 'blur(4px)',
                       direction: 'ltr',
@@ -546,11 +547,32 @@ export default function Settings() {
           </div>
         </div>
 
-        <div style={{ position: 'sticky', bottom: 20, zIndex: 10, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', padding: '14px 20px', borderRadius: 14, border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.1)' }}>
-          <span style={{ fontSize: 13, color: 'var(--text-dim)' }}>
+        <div style={{
+          position: 'sticky',
+          bottom: 16,
+          zIndex: 30,
+          background: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          padding: '14px 18px',
+          borderRadius: 14,
+          border: '1px solid var(--line)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12,
+          flexWrap: 'wrap',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.1)'
+        }}>
+          <span style={{ fontSize: 13, color: 'var(--text-dim)', flex: '1 1 240px' }}>
             {saved ? '✅ تم تطبيق وحفظ كافة التعديلات بنجاح!' : 'تأكد من الضغط على زر الحفظ لتطبيق التغييرات على المتجر مباشرة.'}
           </span>
-          <button type="submit" className="btn btn-brass" disabled={saving} style={{ minWidth: 180, fontWeight: 700 }}>
+          <button
+            type="submit"
+            className="btn btn-brass"
+            disabled={saving}
+            style={{ flex: '1 1 auto', minWidth: 160, fontWeight: 700, padding: '12px 20px' }}
+          >
             {saved ? 'تم الحفظ بنجاح ✓' : saving ? 'جاري الحفظ...' : 'حفظ كافة الإعدادات'}
           </button>
         </div>
